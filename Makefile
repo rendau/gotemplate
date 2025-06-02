@@ -23,7 +23,7 @@ refresh-vendor-proto:
 	git clone --depth=1 --single-branch git@github.com:mechta-market/protos.git vendor-proto
 #	cd vendor-proto && rm -rf .git .idea && rm -rf SVC_v1 && find . -type f ! -name '*.proto' -delete
 
-vendor-proto-dirs = vp-common vp-cron vp-c1_gw_v1 vp-nsi_v1 vp-mb_broker vp-jwts_v1 vp-sms_v1 vp-event_writer
+vendor-proto-dirs = vp-common
 vp-%:
 	mkdir -p pkg/proto
 	protoc -I vendor-proto \

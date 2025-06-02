@@ -5,10 +5,3 @@ const (
 
 	MaxPageSize = 1000
 )
-
-// Role
-const (
-	RoleAdmin    = "admin"
-	RoleManager  = "manager"
-	RoleDirector = "director"
-)
