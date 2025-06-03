@@ -1,0 +1,31 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    env:
+      OWNER: mechta-market
+      IMAGE: SVC:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - run: go mod download
+
+      # - run: go test -v ./...
+
+      - run: make
+
+      - run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ --password-stdin
+
+      - run: docker build -t ghcr.io/$OWNER/$IMAGE .
+
+      - run: docker push ghcr.io/$OWNER/$IMAGE
