@@ -4,8 +4,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mechta-market/delivery/internal/domain/common/model"
-	"github.com/mechta-market/delivery/internal/errs"
+	"github.com/mechta-market/gotemplate/internal/domain/common/model"
+	"github.com/mechta-market/gotemplate/internal/errs"
 )
 
 const (

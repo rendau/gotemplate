@@ -16,3 +16,4 @@ cover.html
 .vscode
 *.swp
 /*.custom
+.DS_Store
