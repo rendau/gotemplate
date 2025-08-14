@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/mechta-market/gotemplate/internal/errs"
 	"io"
 	"log/slog"
 	"net/http"
@@ -18,7 +19,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/mechta-market/gotemplate/internal/config"
-	"github.com/mechta-market/gotemplate/internal/constant"
 )
 
 func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handler, error) {
@@ -54,7 +54,7 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 			if len(repBody) == 0 {
 				//runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
 				obj := map[string]string{
-					"code":    constant.ServiceNA.Error(),
+					"code":    errs.ServiceNA.Error(),
 					"message": err.Error(),
 				}
 				repBody, err = json.Marshal(obj)

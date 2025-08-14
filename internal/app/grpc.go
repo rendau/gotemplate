@@ -19,7 +19,7 @@ import (
 	"google.golang.org/protobuf/protoadapt"
 
 	"github.com/mechta-market/gotemplate/internal/config"
-	"github.com/mechta-market/gotemplate/internal/constant"
+	"github.com/mechta-market/gotemplate/internal/errs"
 	"github.com/mechta-market/gotemplate/pkg/proto/common"
 )
 
@@ -135,14 +135,14 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 		var ei protoadapt.MessageV1
 		errStr := err.Error()
 
-		var errBase constant.Err
+		var errBase errs.Err
 		if errors.As(err, &errBase) { // constant.Err
 			ei = &common.ErrorRep{
 				Code:    errBase.Error(),
 				Message: errStr,
 			}
 		} else {
-			var errFull constant.ErrFull
+			var errFull errs.ErrFull
 			if errors.As(err, &errFull) { // constant.ErrFull
 				ei = &common.ErrorRep{
 					Code:    errFull.Err.Error(),
@@ -153,7 +153,7 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 		}
 		if ei == nil {
 			ei = &common.ErrorRep{
-				Code:    constant.ServiceNA.Error(),
+				Code:    errs.ServiceNA.Error(),
 				Message: errStr,
 			}
 		}

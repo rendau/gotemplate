@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/mechta-market/gotemplate/internal/errs"
 	"math"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
@@ -13,7 +14,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	"github.com/mechta-market/gotemplate/internal/constant"
 	"github.com/mechta-market/gotemplate/pkg/proto/common"
 )
 
@@ -70,15 +70,15 @@ func (o *grpcClientInterceptorErrorT) grpcClientInterceptorError(ctx context.Con
 			stDetail := st.Details()[0]
 			errObj, ok := stDetail.(*common.ErrorRep)
 			if ok {
-				return constant.ErrFull{
-					Err:    constant.Err(errObj.Code),
+				return errs.ErrFull{
+					Err:    errs.Err(errObj.Code),
 					Desc:   o.errMessagePrefix + errObj.Message,
 					Fields: errObj.Fields,
 				}
 			}
 		}
-		return constant.ErrFull{
-			Err:  constant.ServiceNA,
+		return errs.ErrFull{
+			Err:  errs.ServiceNA,
 			Desc: o.errMessagePrefix + st.String(),
 		}
 	}
