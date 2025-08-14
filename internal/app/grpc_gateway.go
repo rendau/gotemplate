@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/mechta-market/gotemplate/internal/errs"
 	"io"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/mechta-market/gotemplate/internal/errs"
 
 	"github.com/goccy/go-json"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -52,7 +53,7 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 			}
 
 			if len(repBody) == 0 {
-				//runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
+				// runtime.DefaultHTTPErrorHandler(ctx, mux, marshaler, w, r, err)
 				obj := map[string]string{
 					"code":    errs.ServiceNA.Error(),
 					"message": err.Error(),
@@ -65,7 +66,7 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 				}
 			}
 
-			//slog.Error("GRPC_GW: ErrorHandler", "error", err)
+			// slog.Error("GRPC_GW: ErrorHandler", "error", err)
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
@@ -73,7 +74,7 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 			if err != nil {
 				slog.Error("GRPC_GW: ErrorHandler: Failed to write response", "error", err)
 			}
-			//_, _ = w.Write(repBody)
+			// _, _ = w.Write(repBody)
 		}),
 	)
 
@@ -141,7 +142,7 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 	handler = func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
-				// use always new err instance in defer
+				// use always new err instance in deferring
 				if err := recover(); err != nil {
 					slog.Error(
 						"Recovered from panic",

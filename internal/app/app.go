@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/mechta-market/gotemplate/internal/constant"
 	"io"
 	"log/slog"
 	"net/http"
