@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/mechta-market/gotemplate/internal/errs"
 	"math"
+
+	"github.com/mechta-market/gotemplate/internal/errs"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/opentracing/opentracing-go"
@@ -29,8 +30,10 @@ func newGrpcClientConn(uri string, secure bool, username, password, errMessagePr
 	dialOptions := []grpc.DialOption{
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(math.MaxInt32)),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(math.MaxInt32)),
-		grpc.WithUnaryInterceptor(otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer())),
-		grpc.WithUnaryInterceptor(errInterceptor.grpcClientInterceptorError),
+		grpc.WithChainUnaryInterceptor(
+			otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer()),
+			errInterceptor.grpcClientInterceptorError,
+		),
 	}
 
 	if secure {
