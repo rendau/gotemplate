@@ -21,7 +21,7 @@ proto-plugins:
 refresh-vendor-proto:
 	rm -rf vendor-proto &&\
 	git clone --depth=1 --single-branch git@github.com:mechta-market/protos.git vendor-proto
-#	cd vendor-proto && rm -rf .git .idea && rm -rf SVC_v1 && find . -type f ! -name '*.proto' -delete
+	cd vendor-proto && rm -rf .git .idea && rm -rf SVC_v1 && find . -type f ! -name '*.proto' -delete
 
 vendor-proto-dirs = vp-common
 vp-%:
@@ -35,14 +35,14 @@ vp-%:
 
 generate-vendor-proto-dirs: $(vendor-proto-dirs)
 
-#generate-proto-SVC_v1:
-#	mkdir -p pkg/proto
-#	protoc -I vendor-proto -I api/proto \
-#	--go_out pkg/proto --go_opt paths=source_relative \
-#		--go_opt=Mcommon/common.proto=`go list -m`/pkg/proto/common \
-#	--go-grpc_out pkg/proto --go-grpc_opt paths=source_relative \
-#	--grpc-gateway_out pkg/proto --grpc-gateway_opt paths=source_relative \
-#	--openapiv2_out=json_names_for_fields=false,allow_merge=true,merge_file_name=api:docs \
-#	api/proto/SVC_v1/*.proto
-#
-#generate-proto: generate-vendor-proto-dirs generate-proto-SVC_v1
+generate-proto-SVC_v1:
+	mkdir -p pkg/proto
+	protoc -I vendor-proto -I api/proto \
+	--go_out pkg/proto --go_opt paths=source_relative \
+		--go_opt=Mcommon/common.proto=`go list -m`/pkg/proto/common \
+	--go-grpc_out pkg/proto --go-grpc_opt paths=source_relative \
+	--grpc-gateway_out pkg/proto --grpc-gateway_opt paths=source_relative \
+	--openapiv2_out=json_names_for_fields=false,allow_merge=true,merge_file_name=api:docs \
+	api/proto/SVC_v1/*.proto
+
+generate-proto: generate-vendor-proto-dirs generate-proto-SVC_v1
