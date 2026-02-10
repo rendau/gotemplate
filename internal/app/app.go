@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -41,9 +42,27 @@ func (a *App) Init() {
 
 	// logger
 	{
+		var slogLevel slog.Level
+		switch strings.ToLower(config.Conf.LogLevel) {
+		case "debug":
+			slogLevel = slog.LevelDebug
+		case "info":
+			slogLevel = slog.LevelInfo
+		case "warn":
+			slogLevel = slog.LevelWarn
+		case "error":
+			slogLevel = slog.LevelError
+		default:
+			slogLevel = slog.LevelInfo
+		}
+
 		if !config.Conf.Debug {
-			logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+			logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+				Level: slogLevel,
+			}))
 			slog.SetDefault(logger)
+		} else {
+			slog.SetLogLoggerLevel(slogLevel)
 		}
 	}
 

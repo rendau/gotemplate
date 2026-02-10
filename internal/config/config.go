@@ -8,6 +8,7 @@ import (
 var Conf = struct {
 	Namespace     string `env:"NAMESPACE" envDefault:"example.com"`
 	Debug         bool   `env:"DEBUG" envDefault:"false"`
+	LogLevel      string `env:"LOG_LEVEL" envDefault:"info"`
 	GrpcPort      string `env:"GRPC_PORT" envDefault:"5050"`
 	HttpPort      string `env:"HTTP_PORT" envDefault:"80"`
 	HttpCors      bool   `env:"HTTP_CORS" envDefault:"false"`
