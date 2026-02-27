@@ -15,10 +15,8 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/mechta-market/gotemplate/internal/config"
+	"google.golang.org/grpc"
 )
 
 type App struct {
@@ -27,7 +25,7 @@ type App struct {
 	pgpool *pgxpool.Pool
 
 	grpcServer *GrpcServer
-	httpServer *http.Server
+	httpServer *GrpcGwServer
 
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -42,28 +40,25 @@ func (a *App) Init() {
 
 	// logger
 	{
-		var slogLevel slog.Level
+		slogOpts := &slog.HandlerOptions{
+			AddSource: config.Conf.Debug,
+			Level:     slog.LevelInfo,
+		}
 		switch strings.ToLower(config.Conf.LogLevel) {
 		case "debug":
-			slogLevel = slog.LevelDebug
+			slogOpts.Level = slog.LevelDebug
 		case "info":
-			slogLevel = slog.LevelInfo
+			slogOpts.Level = slog.LevelInfo
 		case "warn":
-			slogLevel = slog.LevelWarn
+			slogOpts.Level = slog.LevelWarn
 		case "error":
-			slogLevel = slog.LevelError
-		default:
-			slogLevel = slog.LevelInfo
+			slogOpts.Level = slog.LevelError
 		}
-
-		if !config.Conf.Debug {
-			logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-				Level: slogLevel,
-			}))
-			slog.SetDefault(logger)
-		} else {
-			slog.SetLogLoggerLevel(slogLevel)
+		logger := slog.New(slog.NewJSONHandler(os.Stdout, slogOpts))
+		if config.Conf.Debug {
+			logger = slog.New(slog.NewTextHandler(os.Stdout, slogOpts))
 		}
+		slog.SetDefault(logger)
 	}
 
 	// globalTracer
@@ -99,61 +94,18 @@ func (a *App) Init() {
 
 	// http-gw server
 	{
-		var handler http.Handler
-
-		handler, err = GrpcGatewayCreateHandler(func(mux *runtime.ServeMux) error {
-			opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-
-			var conn *grpc.ClientConn
-			conn, err = grpc.NewClient("localhost:"+config.Conf.GrpcPort, opts...)
-			errCheck(err, "grpc.Dial")
-
-			// register grpc handlers
-			handlers := []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
+		a.httpServer, err = NewGrpcGwServer(
+			[]func(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error{
 				// server registers
-			}
-			for _, h := range handlers {
-				err = h(context.Background(), mux, conn)
-				if err != nil {
-					return fmt.Errorf("grpc-gateway: register grpc-handler: %w", err)
-				}
-			}
-
-			// http handlers
-			httpHandlers := []struct {
-				method  string
-				path    string
-				handler runtime.HandlerFunc
-			}{
+			},
+			[]HttpRoute{
 				{
-					"GET", "/tst", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-					slog.Error("test error", "error", errors.New("test error"))
+					Method: http.MethodGet, Path: "/tst", Handler: func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+						slog.Error("test error", "error", errors.New("test error"))
+					},
 				},
-				},
-				// examples:
-				// {"POST", "/route/register", handlerHttpRouteRegister.Register},
-				// {"GET", "/route/{id}/link", handlerHttpRouteRegister.GetLink},
-				// {"POST", "/ord_shop_change", handlerHttpOrdShopChange.Set},
-			}
-			for _, h := range httpHandlers {
-				err = mux.HandlePath(h.method, h.path, h.handler)
-				if err != nil {
-					return fmt.Errorf("grpc-gateway: register http-handler: %w", err)
-				}
-			}
-
-			return nil
-		})
-		errCheck(err, "grpcGatewayCreateHandler")
-
-		// server
-		a.httpServer = &http.Server{
-			Addr:              ":" + config.Conf.HttpPort,
-			Handler:           handler,
-			ReadHeaderTimeout: 2 * time.Second,
-			ReadTimeout:       time.Minute,
-			MaxHeaderBytes:    300 * 1024,
-		}
+			})
+		errCheck(err, "NewGrpcGwServer")
 	}
 }
 
@@ -170,15 +122,9 @@ func (a *App) Start() {
 		errCheck(err, "grpcServer.Start")
 	}
 
-	// http-gw server
+	// grpc-gw server
 	{
-		go func() {
-			err := a.httpServer.ListenAndServe()
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				// errCheck(err, "http-server stopped")
-			}
-		}()
-		slog.Info("http-server started " + a.httpServer.Addr)
+		a.httpServer.Start()
 	}
 }
 
@@ -187,7 +133,8 @@ func (a *App) Listen() {
 	defer signalCtxCancel()
 
 	// wait signal
-	<-signalCtx.Done()
+	sig := <-signalCtx.Done()
+	slog.Info("Shutdown signal received", "signal", sig)
 }
 
 func (a *App) Stop() {
@@ -196,13 +143,11 @@ func (a *App) Stop() {
 	// stop context
 	a.ctxCancel()
 
-	// http-gw server
+	// grpc-gw server
 	{
-		ctx, ctxCancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer ctxCancel()
-
-		if err := a.httpServer.Shutdown(ctx); err != nil {
-			slog.Error("http-server shutdown error", "error", err)
+		err := a.httpServer.Stop(context.Background())
+		if err != nil {
+			slog.Error("httpServer.Stop", "error", err)
 			a.exitCode = 1
 		}
 	}
