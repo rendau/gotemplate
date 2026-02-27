@@ -8,10 +8,14 @@ func (e Err) Error() string {
 
 // common errors
 const (
-	NoRows            = Err("err_no_rows")
 	ServiceNA         = Err("service_not_available")
-	NotAuthorized     = Err("not_authorized")
+	NotImplemented    = Err("not_implemented")
+	InvalidConfig     = Err("invalid_config")
+	NoPermission      = Err("no_permission")
 	ObjectNotFound    = Err("object_not_found")
+	NoRows            = Err("err_no_rows")
+	NotAuthorized     = Err("not_authorized")
+	InvalidRequest    = Err("invalid_request")
 	IncorrectPageSize = Err("incorrect_page_size")
 )
 
