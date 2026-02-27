@@ -2,12 +2,13 @@ package app
 
 import (
 	"log/slog"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	"os"
 
 	"github.com/mechta-market/gotemplate/internal/config"
 	"github.com/mechta-market/gotemplate/internal/constant"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var (
@@ -20,7 +21,7 @@ func init() {
 		return
 	}
 
-	slog.Info("metrics enabled")
+	slog.New(slog.NewJSONHandler(os.Stdout, nil)).Info("metrics enabled")
 
 	metricRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: config.Conf.Namespace,
