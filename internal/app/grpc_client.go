@@ -103,7 +103,7 @@ func newGrpcClientBasicAuth(username, password string) *grpcClientBasicAuth {
 	}
 }
 
-func (o *grpcClientBasicAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+func (o *grpcClientBasicAuth) GetRequestMetadata(_ context.Context, _ ...string) (map[string]string, error) {
 	return o.metadata, nil
 }
 
