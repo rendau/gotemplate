@@ -8,7 +8,12 @@ import (
 	"math"
 	"net"
 	"os"
+	"runtime/debug"
 	"time"
+
+	"github.com/mechta-market/gotemplate/internal/config"
+	"github.com/mechta-market/gotemplate/internal/errs"
+	"github.com/mechta-market/gotemplate/pkg/proto/common"
 
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
@@ -16,11 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/protoadapt"
-
-	"github.com/mechta-market/gotemplate/internal/config"
-	"github.com/mechta-market/gotemplate/internal/errs"
-	"github.com/mechta-market/gotemplate/pkg/proto/common"
 )
 
 type GrpcServer struct {
@@ -29,10 +29,13 @@ type GrpcServer struct {
 }
 
 func NewGrpcServer(name string, register func(*grpc.Server)) *GrpcServer {
-	interceptors := make([]grpc.UnaryServerInterceptor, 0, 4)
+	interceptors := make([]grpc.UnaryServerInterceptor, 0, 5)
 
 	// ctx without cancel
 	interceptors = append(interceptors, GrpcInterceptorCtxWithoutCancel())
+
+	// recovery
+	interceptors = append(interceptors, GrpcInterceptorRecovery())
 
 	// error
 	interceptors = append(interceptors, GrpcInterceptorError())
@@ -76,7 +79,7 @@ func (s *GrpcServer) Start() error {
 	go func() {
 		err = s.server.Serve(lis)
 		if err != nil {
-			slog.Error(s.name + "-grpc-server stopped: " + err.Error())
+			slog.Error(s.name+"-grpc-server stopped", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -89,7 +92,7 @@ func (s *GrpcServer) Stop() {
 }
 
 func GrpcInterceptorCtxWithoutCancel() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		return handler(context.WithoutCancel(ctx), req)
 	}
 }
@@ -99,12 +102,30 @@ func GrpcInterceptorTracing() grpc.UnaryServerInterceptor {
 
 	return otgrpc.OpenTracingServerInterceptor(
 		tracer,
-		otgrpc.SpanDecorator(func(ctx context.Context, span opentracing.Span, method string, req, resp any, err error) {
+		otgrpc.SpanDecorator(func(_ context.Context, span opentracing.Span, method string, req, resp any, err error) {
 			if err != nil {
 				span.SetTag("error", true)
 			}
 		}),
 	)
+}
+
+func GrpcInterceptorRecovery() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				slog.Error(
+					"Recovered from grpc panic",
+					slog.Any("error", recovered),
+					slog.String("fullMethod", info.FullMethod),
+					slog.Any("recovery_stacktrace", string(debug.Stack())),
+				)
+				err = status.Error(codes.Internal, "internal server error")
+			}
+		}()
+
+		return handler(ctx, req)
+	}
 }
 
 func GrpcInterceptorMetrics() grpc.UnaryServerInterceptor {
@@ -132,26 +153,25 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 			return h, nil
 		}
 
-		var ei protoadapt.MessageV1
+		var ei *common.ErrorRep
 		errStr := err.Error()
 
-		var errBase errs.Err
-		if errors.As(err, &errBase) { // constant.Err
+		if fullErr, ok := errors.AsType[errs.ErrFull](err); ok {
+			errCode := errs.ServiceNA.Error()
+			if fullErr.Err != nil {
+				errCode = fullErr.Err.Error()
+			}
 			ei = &common.ErrorRep{
-				Code:    errBase.Error(),
+				Code:    errCode,
+				Message: fullErr.Desc,
+				Fields:  fullErr.Fields,
+			}
+		} else if baseErr, ok := errors.AsType[errs.Err](err); ok {
+			ei = &common.ErrorRep{
+				Code:    baseErr.Error(),
 				Message: errStr,
 			}
 		} else {
-			var errFull errs.ErrFull
-			if errors.As(err, &errFull) { // constant.ErrFull
-				ei = &common.ErrorRep{
-					Code:    errFull.Err.Error(),
-					Message: errFull.Desc,
-					Fields:  errFull.Fields,
-				}
-			}
-		}
-		if ei == nil {
 			ei = &common.ErrorRep{
 				Code:    errs.ServiceNA.Error(),
 				Message: errStr,
