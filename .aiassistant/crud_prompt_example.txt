@@ -1,0 +1,19 @@
+Сделай CRUD для сущности `node` по точному шаблону из `.aiassistant/crud_example` и связанных слоев.
+
+Поля:
+- id string
+- name string
+- ord int
+
+Требования:
+1. Не упрощай и не изобретай свою структуру.
+2. Повтори архитектурный паттерн 1-в-1
+6. После изменений запусти gofmt и `go test ./...`.
+
+Сначала прочитай полностью:
+- `.aiassistant/crud_example/internal/domain`
+- `.aiassistant/crud_example/internal/usecase`
+- `.aiassistant/crud_example/internal/handler`
+- `.aiassistant/crud_example/api`
+и только потом пиши код.
+Не забудь реализовать proto+grpc. И соедини все в /internal/app/app.go
