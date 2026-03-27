@@ -13,12 +13,15 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/samber/lo"
+
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/mechta-market/gotemplate/internal/config"
+	"github.com/mechta-market/gotemplate/internal/constant"
 )
 
 type App struct {
@@ -67,13 +70,13 @@ func (a *App) Init() {
 	}
 
 	// globalTracer
-	// {
-	// 	if config.Conf.WithTracing && config.Conf.JaegerAddress != "" {
-	// 		slog.Info("tracing enabled")
-	// 		_, a.globalTracerCloser, err = tracerInitGlobal(config.Conf.JaegerAddress, constant.ServiceName)
-	// 		errCheck(err, "tracerInitGlobal")
-	// 	}
-	// }
+	{
+		if config.Conf.WithTracing && config.Conf.JaegerAddress != "" {
+			slog.Info("tracing enabled")
+			_, a.globalTracerCloser, err = tracerInitGlobal(config.Conf.JaegerAddress, constant.ServiceName)
+			errCheck(err, "tracerInitGlobal")
+		}
+	}
 
 	// pgpool
 	{
