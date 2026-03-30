@@ -17,4 +17,4 @@ cover.html
 *.swp
 /*.custom
 .DS_Store
-.migrate_scripts
+.gocache

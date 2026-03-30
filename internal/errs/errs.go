@@ -19,7 +19,6 @@ const (
 	IncorrectPageSize = Err("incorrect_page_size")
 )
 
-// ErrFull
 type ErrFull struct {
 	Err    error
 	Desc   string
