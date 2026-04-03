@@ -33,7 +33,7 @@ skills/
 или
 
 ```bash
-npx skills add .aiasstant/skills/
+npx skills add ./.aiasstant/skills/
 ```
 
 ### Codex
