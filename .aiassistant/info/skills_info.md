@@ -30,6 +30,12 @@ skills/
 
 Локальные skills из `.aiassistant/skills/` можно скопировать в директории, откуда их читает соответствующий инструмент.
 
+или
+
+```bash
+npx skills add .aiasstant/skills/
+```
+
 ### Codex
 
 ```bash
