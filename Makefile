@@ -5,7 +5,7 @@ BUILD_PATH = cmd/build
 SERVICE_NAME = SVC_v1
 
 # vendor repo sparse dirs
-protos-dirs = google protoc-gen-openapiv2 common
+protos-dirs = google common
 vendor-proto-dirs = vp-common
 
 .SILENT:
@@ -31,8 +31,7 @@ proto-plugins:
 refresh-vendor-proto:
 	rm -rf vendor-proto && \
 		git clone --depth=1 --filter=blob:none --sparse git@github.com:mechta-market/protos.git vendor-proto
-	cd vendor-proto && git sparse-checkout set \
-		$(protos-dirs)
+	cd vendor-proto && git sparse-checkout set $(protos-dirs)
 	cd vendor-proto && rm -rf .git .idea && find . -type f ! -name '*.proto' -delete
 
 vp-%:
