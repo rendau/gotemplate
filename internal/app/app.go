@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -44,30 +43,7 @@ func (a *App) Init() {
 	a.ctx, a.ctxCancel = context.WithCancel(context.Background())
 
 	// logger
-	{
-		var slogLevel slog.Level
-		switch strings.ToLower(config.Conf.LogLevel) {
-		case "debug":
-			slogLevel = slog.LevelDebug
-		case "info":
-			slogLevel = slog.LevelInfo
-		case "warn":
-			slogLevel = slog.LevelWarn
-		case "error":
-			slogLevel = slog.LevelError
-		default:
-			slogLevel = slog.LevelInfo
-		}
-
-		if !config.Conf.Debug {
-			logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-				Level: slogLevel,
-			}))
-			slog.SetDefault(logger)
-		} else {
-			slog.SetLogLoggerLevel(slogLevel)
-		}
-	}
+	initLogger(config.Conf.Debug, config.Conf.LogLevel)
 
 	// globalTracer
 	{
@@ -79,19 +55,8 @@ func (a *App) Init() {
 	}
 
 	// pgpool
-	{
-		pgConf, err := pgxpool.ParseConfig(config.Conf.PgDsn)
-		errCheck(err, "pgxpool.ParseConfig")
-
-		pgConf.MaxConns = 10
-		pgConf.MinConns = 2
-		pgConf.MaxConnLifetime = 3 * time.Minute
-		pgConf.MaxConnIdleTime = time.Minute
-		pgConf.HealthCheckPeriod = 15 * time.Second
-
-		a.pgpool, err = pgxpool.NewWithConfig(context.Background(), pgConf)
-		errCheck(err, "pgxpool.NewWithConfig")
-	}
+	a.pgpool, err = initPgPool(config.Conf.PgDsn)
+	errCheck(err, "pgpool init")
 
 	// grpc server
 	{
