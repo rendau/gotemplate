@@ -58,6 +58,12 @@ func (a *App) Init() {
 	a.pgpool, err = initPgPool(config.Conf.PgDsn)
 	errCheck(err, "pgpool init")
 
+	// migrations
+	{
+		runMigrations()
+		slog.Info("PG-migrations have been successfully applied")
+	}
+
 	// grpc server
 	{
 		a.grpcServer = NewGrpcServer("main", func(server *grpc.Server) {
