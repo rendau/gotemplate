@@ -5,7 +5,7 @@ BUILD_PATH = cmd/build
 SERVICE_NAME = SVC_v1
 
 # vendor repo sparse dirs
-protos-dirs = google common
+protos-dirs = google protoc-gen-openapiv2 common
 vendor-proto-dirs = vp-common
 
 .SILENT:
