@@ -6,16 +6,19 @@ import (
 )
 
 var Conf = struct {
-	Namespace     string `env:"NAMESPACE" envDefault:"example.com"`
-	Debug         bool   `env:"DEBUG" envDefault:"false"`
-	LogLevel      string `env:"LOG_LEVEL" envDefault:"info"`
-	GrpcPort      string `env:"GRPC_PORT" envDefault:"5050"`
-	HttpPort      string `env:"HTTP_PORT" envDefault:"80"`
-	HttpCors      bool   `env:"HTTP_CORS" envDefault:"false"`
+	Namespace string `env:"NAMESPACE" envDefault:"example.com"`
+	Debug     bool   `env:"DEBUG" envDefault:"false"`
+	LogLevel  string `env:"LOG_LEVEL" envDefault:"info"`
+
 	WithMetrics   bool   `env:"WITH_METRICS" envDefault:"false"`
 	WithTracing   bool   `env:"WITH_TRACING" envDefault:"false"`
 	JaegerAddress string `env:"JAEGER_ADDRESS"`
-	PgDsn         string `env:"PG_DSN"`
+
+	GrpcPort string `env:"GRPC_PORT" envDefault:"5050"`
+	HttpPort string `env:"HTTP_PORT" envDefault:"80"`
+	HttpCors bool   `env:"HTTP_CORS" envDefault:"false"`
+
+	PgDsn string `env:"PG_DSN"`
 }{}
 
 func init() {
