@@ -2,7 +2,7 @@
 
 BINARY_NAME = svc
 BUILD_PATH = cmd/build
-SERVICE_NAME = SVC_v1
+SERVICE_NAME = svc_v1
 
 # vendor repo sparse dirs
 protos-dirs = google protoc-gen-openapiv2 common
