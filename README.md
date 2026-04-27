@@ -3,15 +3,15 @@
 ### DB dump:
 
 ```
-pg_dump --no-owner -Fc -U postgres SVC_NAME -f ./SVC_NAME.custom
+pg_dump --no-owner -Fc -U postgres svc -f ./svc.custom
 ```
 
 ### DB restore:
 
 ```
-dropdb -U postgres SVC_NAME
-createdb -U postgres SVC_NAME
-pg_restore --no-owner -d SVC_NAME -U postgres ./SVC_NAME.custom
+dropdb -U postgres svc
+createdb -U postgres svc
+pg_restore --no-owner -d svc -U postgres ./svc.custom
 ```
 
 ### Install `migrate` command-tool:
