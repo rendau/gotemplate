@@ -9,7 +9,7 @@ jobs:
     runs-on: yc-arc
     env:
       OWNER: mechta-market
-      IMAGE: SVC:latest
+      IMAGE: svc:latest
     steps:
       - uses: actions/checkout@v6
 
