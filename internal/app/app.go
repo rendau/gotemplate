@@ -196,6 +196,8 @@ func (a *App) Exit() {
 		_ = a.globalTracerCloser.Close()
 	}
 
+	a.pgpool.Close()
+
 	// flush stdout
 
 	os.Exit(a.exitCode)

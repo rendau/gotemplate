@@ -25,7 +25,8 @@ func init() {
 
 	metricRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: config.Conf.Namespace,
-		Name:      constant.ServiceName + "_request_count",
+		Subsystem: constant.ServiceName,
+		Name:      "request_count",
 	}, []string{
 		"protocol",
 		"method",
@@ -34,7 +35,8 @@ func init() {
 
 	metricResponseDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: config.Conf.Namespace,
-		Name:      constant.ServiceName + "_response_duration_seconds",
+		Subsystem: constant.ServiceName,
+		Name:      "response_duration_seconds",
 	}, []string{
 		"protocol",
 		"method",
