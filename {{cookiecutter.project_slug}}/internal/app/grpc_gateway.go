@@ -13,7 +13,6 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -83,36 +82,6 @@ func GrpcGatewayCreateHandler(muxHook func(*runtime.ServeMux) error) (http.Handl
 		if err != nil {
 			return nil, fmt.Errorf("grpc-gateway: muxHook: %w", err)
 		}
-	}
-
-	// add health check handler
-	err := mux.HandlePath(http.MethodGet, "/healthcheck", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		w.WriteHeader(http.StatusOK)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("grpc-gateway: register healthcheck handler: %w", err)
-	}
-
-	// add docs handler
-	docFS := http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs")))
-	err = mux.HandlePath(http.MethodGet, "/docs/{any}", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		docFS.ServeHTTP(w, r)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("grpc-gateway: register docs handler: %w", err)
-	}
-	err = mux.HandlePath(http.MethodGet, "/docs/{any}/{any}", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		docFS.ServeHTTP(w, r)
-	})
-	if err != nil {
-		return nil, fmt.Errorf("grpc-gateway: register docs handler: %w", err)
-	}
-
-	// add metrics handler
-	if err = mux.HandlePath(http.MethodGet, "/metrics", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-		promhttp.Handler().ServeHTTP(w, r)
-	}); err != nil {
-		return nil, fmt.Errorf("grpc-gateway: register metrics handler: %w", err)
 	}
 
 	handler := http.Handler(mux)

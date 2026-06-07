@@ -28,8 +28,9 @@ type App struct {
 
 	pgpool *pgxpool.Pool
 
-	grpcServer *GrpcServer
-	httpServer *http.Server
+	grpcServer       *GrpcServer
+	httpServer       *http.Server
+	systemHttpServer *http.Server
 
 	ctx       context.Context
 	ctxCancel context.CancelFunc
@@ -126,6 +127,11 @@ func (a *App) Init() {
 			MaxHeaderBytes:    300 * 1024,
 		}
 	}
+
+	// system http server (healthcheck, docs, metrics)
+	{
+		a.systemHttpServer = SystemHttpServerCreate()
+	}
 }
 
 func (a *App) PreStartHook() {
@@ -151,6 +157,17 @@ func (a *App) Start() {
 		}()
 		slog.Info("http-server started " + a.httpServer.Addr)
 	}
+
+	// system http server
+	{
+		go func() {
+			err := a.systemHttpServer.ListenAndServe()
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				// errCheck(err, "system-http-server stopped")
+			}
+		}()
+		slog.Info("system-http-server started " + a.systemHttpServer.Addr)
+	}
 }
 
 func (a *App) Listen() {
@@ -174,6 +191,17 @@ func (a *App) Stop() {
 
 		if err := a.httpServer.Shutdown(ctx); err != nil {
 			slog.Error("http-server shutdown error", "error", err)
+			a.exitCode = 1
+		}
+	}
+
+	// system http server
+	{
+		ctx, ctxCancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer ctxCancel()
+
+		if err := a.systemHttpServer.Shutdown(ctx); err != nil {
+			slog.Error("system-http-server shutdown error", "error", err)
 			a.exitCode = 1
 		}
 	}

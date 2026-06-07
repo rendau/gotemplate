@@ -24,7 +24,8 @@
 - `internal/app/` — сборка приложения: серверы, миграции, метрики, трассировка, HTTP-gateway, DI.
   - `app.go` — граф зависимостей и запуск компонентов.
   - `grpc.go` — gRPC сервер + интерсепторы ошибок/метрик/трейсинга.
-  - `grpc_gateway.go` — HTTP-gateway, CORS, метрики, /docs, /healthcheck.
+  - `grpc_gateway.go` — HTTP-gateway, CORS, error handler.
+  - `system_http_server.go` — системный HTTP-сервер (порт 3003): /healthcheck, /docs/*, /metrics.
   - `migration.go` — запуск миграций из `migrations/`.
 - `internal/config/` — конфигурация через env (см. `config.go`).
 - `internal/handler/` — транспортный слой.
@@ -114,13 +115,18 @@ domain service → repo
 - Описаны в `internal/config/config.go`.
 - Примеры: `.env.example`, `.migrate_scripts.example`.
 
+### Системный HTTP-сервер
+- Отдельный сервер на порту `3003` (`const systemHttpPort` в `internal/app/system_http_server.go`).
+- Обслуживает служебные ручки: `/healthcheck`, `/docs/*`, `/metrics`.
+
 ### Метрики и трассировка
-- Prometheus метрики на `/metrics` при `WITH_METRICS=true`.
+- Prometheus метрики на `/metrics` (системный сервер, порт 3003) при `WITH_METRICS=true`.
+  Используется `metrics.Registry`, а не дефолтный `promhttp.Handler()`.
 - Трейсинг Jaeger включается при `WITH_TRACING=true` и `JAEGER_ADDRESS`.
 
 ### Документация и healthcheck
-- `/healthcheck` — HTTP healthcheck (200 OK).
-- `/docs/*` — статические docs + swagger (`docs/api.swagger.json`).
+- `/healthcheck` — HTTP healthcheck (200 OK), порт 3003.
+- `/docs/*` — статические docs + swagger (`docs/api.swagger.json`), порт 3003.
 
 ### Сборка
 - `make build` создаёт бинарник `cmd/build/svc`.
