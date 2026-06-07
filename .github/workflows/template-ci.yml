@@ -1,0 +1,37 @@
+name: Template CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  render-and-build:
+    name: Render template and build generated project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install cookiecutter
+        run: pipx install cookiecutter
+
+      - name: Render with defaults
+        run: cookiecutter . --no-input -o /tmp/out
+
+      - name: Render with custom values
+        run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme
+
+      - name: Build generated project (defaults)
+        working-directory: /tmp/out/myservice
+        run: |
+          go build ./...
+          go vet ./...
+
+      - name: Assert no leftover template names
+        working-directory: /tmp/out/myservice
+        run: |
+          ! grep -rn 'mechta-market/gotemplate' . --include='*.go' go.mod
+          test -d api/proto/myservice_v1

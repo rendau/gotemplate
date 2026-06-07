@@ -1,20 +1,12 @@
-*.log
-*.tar
-*.tar.gz
-*.tar.bz2
-.idea
-go.work
-go.work.sum
-release/*
-build/
+# Local dev files (must NOT ship with the template repo itself)
 .env
-conf.yml
+.env.*
 .migrate_scripts
-/svc
-cover.out
-cover.html
+.idea
 .vscode
-*.swp
-/*.custom
 .DS_Store
-.gocache
+
+# Cookiecutter render output produced during local testing
+/out/
+/_render/
+*.custom

@@ -1,0 +1,12 @@
+{
+  "project_slug": "myservice",
+  "module_owner": "github.com/mechta-market",
+  "__go_module": "{{ cookiecutter.module_owner }}/{{ cookiecutter.project_slug }}",
+  "__proto_pkg": "{{ cookiecutter.project_slug }}_v1",
+  "__ci_owner": "{{ cookiecutter.module_owner.split('/')[1:] | join('/') }}",
+  "_copy_without_render": [
+    "pkg/proto/*",
+    "vendor-proto/*",
+    "go.sum"
+  ]
+}
