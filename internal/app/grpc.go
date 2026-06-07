@@ -11,16 +11,17 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/mechta-market/gotemplate/internal/config"
-	"github.com/mechta-market/gotemplate/internal/errs"
-	"github.com/mechta-market/gotemplate/pkg/proto/common"
-
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+
+	"github.com/mechta-market/gotemplate/internal/config"
+	"github.com/mechta-market/gotemplate/internal/errs"
+	"github.com/mechta-market/gotemplate/internal/infra/metrics"
+	"github.com/mechta-market/gotemplate/pkg/proto/common"
 )
 
 type GrpcServer struct {
@@ -46,7 +47,7 @@ func NewGrpcServer(name string, register func(*grpc.Server)) *GrpcServer {
 	}
 
 	// metrics
-	if config.Conf.WithMetrics {
+	if metrics.Enabled {
 		interceptors = append(interceptors, GrpcInterceptorMetrics())
 	}
 

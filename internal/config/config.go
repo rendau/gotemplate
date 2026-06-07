@@ -6,11 +6,9 @@ import (
 )
 
 var Conf = struct {
-	Namespace string `env:"NAMESPACE" envDefault:"example.com"`
-	Debug     bool   `env:"DEBUG" envDefault:"false"`
-	LogLevel  string `env:"LOG_LEVEL" envDefault:"info"`
+	Debug    bool   `env:"DEBUG" envDefault:"false"`
+	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
 
-	WithMetrics   bool   `env:"WITH_METRICS" envDefault:"false"`
 	WithTracing   bool   `env:"WITH_TRACING" envDefault:"false"`
 	JaegerAddress string `env:"JAEGER_ADDRESS"`
 
