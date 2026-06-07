@@ -19,12 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	cityDb "github.com/mechta-market/gotemplate/internal/domain/city/repo/db"
-	cityService "github.com/mechta-market/gotemplate/internal/domain/city/service"
-	grpcHandler "github.com/mechta-market/gotemplate/internal/handler/grpc"
-	cityUsc "github.com/mechta-market/gotemplate/internal/usecase/city"
-	svcProto "github.com/mechta-market/gotemplate/pkg/proto/svc_v1"
-
 	"github.com/mechta-market/gotemplate/internal/config"
 	"github.com/mechta-market/gotemplate/internal/constant"
 )
@@ -70,17 +64,10 @@ func (a *App) Init() {
 		slog.Info("PG-migrations have been successfully applied")
 	}
 
-	// dependencies
-	cityRepo := cityDb.New(a.pgpool)
-	citySvc := cityService.New(cityRepo)
-	cityUsecase := cityUsc.New(citySvc)
-	cityHandler := grpcHandler.NewCity(cityUsecase)
-
 	// grpc server
 	{
 		a.grpcServer = NewGrpcServer("main", func(server *grpc.Server) {
 			// server registers
-			svcProto.RegisterCityServiceServer(server, cityHandler)
 		})
 	}
 
@@ -98,7 +85,6 @@ func (a *App) Init() {
 			// register grpc handlers
 			handlers := []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
 				// server registers
-				svcProto.RegisterCityServiceHandler,
 			}
 			for _, h := range handlers {
 				err = h(context.Background(), mux, conn)
@@ -107,21 +93,18 @@ func (a *App) Init() {
 				}
 			}
 
-			// http handlers
+			// custom http handlers
 			httpHandlers := []struct {
 				method  string
 				path    string
 				handler runtime.HandlerFunc
 			}{
 				{
-					"GET", "/tst", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-						slog.Error("test error", "error", errors.New("test error"))
+					"GET", "/tst",
+					func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+						slog.Info("test error", "error", errors.New("test error"))
 					},
 				},
-				// examples:
-				// {"POST", "/route/register", handlerHttpRouteRegister.Register},
-				// {"GET", "/route/{id}/link", handlerHttpRouteRegister.GetLink},
-				// {"POST", "/ord_shop_change", handlerHttpOrdShopChange.Set},
 			}
 			for _, h := range httpHandlers {
 				err = mux.HandlePath(h.method, h.path, h.handler)
