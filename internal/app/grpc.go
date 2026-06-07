@@ -140,7 +140,7 @@ func GrpcInterceptorMetrics() grpc.UnaryServerInterceptor {
 		}
 
 		metricRequestCounter.WithLabelValues("grpc", info.FullMethod, responseStatus).Inc()
-		metricResponseDuration.WithLabelValues("grpc", info.FullMethod, responseStatus).Observe(time.Since(start).Seconds())
+		metricResponseDuration.WithLabelValues("grpc", info.FullMethod).Observe(time.Since(start).Seconds())
 
 		return h, err
 	}

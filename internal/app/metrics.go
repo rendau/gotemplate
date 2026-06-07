@@ -1,14 +1,9 @@
 package app
 
 import (
-	"log/slog"
-	"os"
-
-	"github.com/mechta-market/gotemplate/internal/config"
-	"github.com/mechta-market/gotemplate/internal/constant"
-
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+
+	"github.com/mechta-market/gotemplate/internal/infra/metrics"
 )
 
 var (
@@ -17,29 +12,25 @@ var (
 )
 
 func init() {
-	if !config.Conf.WithMetrics {
-		return
-	}
-
-	slog.New(slog.NewJSONHandler(os.Stdout, nil)).Info("metrics enabled")
-
-	metricRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
-		Namespace: config.Conf.Namespace,
-		Subsystem: constant.ServiceName,
-		Name:      "request_count",
+	metricRequestCounter = metrics.Factory.NewCounterVec(prometheus.CounterOpts{
+		Name: "request_total",
 	}, []string{
 		"protocol",
 		"method",
 		"status",
 	})
 
-	metricResponseDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: config.Conf.Namespace,
-		Subsystem: constant.ServiceName,
-		Name:      "response_duration_seconds",
+	metricResponseDuration = metrics.Factory.NewHistogramVec(prometheus.HistogramOpts{
+		Name: "response_duration_seconds",
+		Buckets: []float64{
+			0.005,
+			0.02,
+			0.1,
+			0.5,
+			2,
+		},
 	}, []string{
 		"protocol",
 		"method",
-		"status",
 	})
 }
