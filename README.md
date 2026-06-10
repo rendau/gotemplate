@@ -12,11 +12,13 @@ proto-генерация через Makefile). Используется для �
 
 ## Генерация нового сервиса
 
+из GitHub:
 ```bash
-# из GitHub
 cookiecutter gh:mechta-market/gotemplate
+```
 
-# или из локальной копии
+или из локальной копии:
+```bash
 cookiecutter /path/to/gotemplate
 ```
 
