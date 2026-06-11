@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"math"
@@ -157,7 +156,7 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 		var ei *common.ErrorRep
 		errStr := err.Error()
 
-		if fullErr, ok := errors.AsType[errs.ErrFull](err); ok {
+		if fullErr, ok := errs.AsErrFull(err); ok { // errs.ErrFull (value or pointer)
 			errCode := errs.ServiceNA.Error()
 			if fullErr.Err != nil {
 				errCode = fullErr.Err.Error()
@@ -167,7 +166,7 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 				Message: fullErr.Desc,
 				Fields:  fullErr.Fields,
 			}
-		} else if baseErr, ok := errors.AsType[errs.Err](err); ok {
+		} else if baseErr, ok := errs.AsErr(err); ok { // errs.Err (value or pointer)
 			ei = &common.ErrorRep{
 				Code:    baseErr.Error(),
 				Message: errStr,

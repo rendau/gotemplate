@@ -97,6 +97,7 @@ domain service → repo
 - **REST-пути (route paths) всегда в единственном числе**, без plural:
   `/secret`, `/secret/{id}`, `/app`, `/item` (не `/secrets`, `/apps`, `/items`).
 - **Пагинация: во всех `list` запросах `page` начинается с `0`** (нумерация страниц с нуля).
+- **Для update использовать HTTP-метод `PUT`** (не `PATCH`): `put: "/<entity>/{id}"`.
 
 ### Ошибки и валидация
 - Семантические ошибки — через `internal/errs` (см. gRPC interceptor в `internal/app/grpc.go`).

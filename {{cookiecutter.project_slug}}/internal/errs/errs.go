@@ -1,5 +1,7 @@
 package errs
 
+import "errors"
+
 type Err string
 
 func (e Err) Error() string {
@@ -28,4 +30,28 @@ type ErrFull struct {
 
 func (e ErrFull) Error() string {
 	return e.Err.Error() + ", desc: " + e.Desc
+}
+
+// AsErr extracts an Err from the error chain regardless of whether it was
+// returned as a value (Err) or a pointer (*Err).
+func AsErr(err error) (Err, bool) {
+	if e, ok := errors.AsType[Err](err); ok {
+		return e, true
+	}
+	if e, ok := errors.AsType[*Err](err); ok && e != nil {
+		return *e, true
+	}
+	return "", false
+}
+
+// AsErrFull extracts an ErrFull from the error chain regardless of whether it
+// was returned as a value (ErrFull) or a pointer (*ErrFull).
+func AsErrFull(err error) (ErrFull, bool) {
+	if e, ok := errors.AsType[ErrFull](err); ok {
+		return e, true
+	}
+	if e, ok := errors.AsType[*ErrFull](err); ok && e != nil {
+		return *e, true
+	}
+	return ErrFull{}, false
 }
