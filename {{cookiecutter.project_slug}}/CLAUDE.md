@@ -4,6 +4,8 @@
 с gRPC/grpc-gateway, Postgres (pgx), proto-генерацией через Makefile.
 
 Для генерации CRUD новой сущности используется skill `crud` (см. `.claude/skills/crud/`).
+Для работы с пакетом `samber/lo` (функциональные хелперы) используется skill `golang-samber-lo`
+(см. `.claude/skills/golang-samber-lo/`).
 
 ---
 
@@ -115,7 +117,11 @@ domain service → repo
 - При создании указателей на значения и литералы используй `new(value)`. Не создавай временные
   переменные только для того, чтобы взять их адрес.
 - По возможности используй пакет `lo` (github.com/samber/lo) вместо ручных циклов
-  (map/filter/reduce и т.п.).
+  (map/filter/reduce и т.п.) — детали и паттерны в skill `golang-samber-lo`.
+- В тестах всегда предпочитай `testify`: `require` для проверок, прерывающих тест,
+  и `assert` для остальных утверждений.
+- При реализации worker pool / параллельной обработки используй `errgroup`
+  (golang.org/x/sync/errgroup), а не ручное управление горутинами через `sync.WaitGroup` + каналы.
 
 ---
 
