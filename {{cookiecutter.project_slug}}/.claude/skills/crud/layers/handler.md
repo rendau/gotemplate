@@ -18,6 +18,10 @@ Transport-слой. Принимает protobuf, вызывает usecase, во�
 - `Get` возвращает `*proto.<Entity>Main` напрямую (не в wrapper-сообщении)
 - `Create` возвращает `*proto.<Entity>CreateRep{Id: newId}` с id новой записи (правило для всех сущностей с id), а не `emptypb.Empty`
 - `Update` передаёт `id` отдельным параметром в usecase: `h.usecase.Update(ctx, req.Id, dto.Decode...)`
+- В `handler` и `dto` **максимально используй `lo`** вместо ручных циклов: маппинг срезов
+  через `lo.Map(items, dto.Encode<Entity>Main)`, а также `lo.Filter`, `lo.GroupBy`, `lo.KeyBy`,
+  `lo.SliceToMap`, `lo.ToPtr`/`lo.FromPtr` и т.п. Никаких `for`-циклов с ручным `append`
+  для конвертации proto↔domain. Паттерны — в skill `golang-samber-lo`.
 
 ## <entity>.go
 

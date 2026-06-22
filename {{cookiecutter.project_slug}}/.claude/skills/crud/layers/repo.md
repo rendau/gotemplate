@@ -131,6 +131,50 @@ func DecodeUpsert(v *domainModel.Edit) *Upsert {
 
 ---
 
+## JSON-колонки — отдельная DTO-модель в repo-слое
+
+Доменная модель **не содержит тегов** `json`/`yaml`. Если поле хранится в БД как JSON-колонка
+(`json`/`jsonb`), модель с тегами `json` и (де)сериализацию держим **здесь, в repo-слое**, рядом
+с `select.go`/`upsert.go`. Доменная `Main`/`Edit` оперируют обычными Go-структурами/срезами.
+
+```go
+// model/select.go (или отдельный model/json.go)
+
+// repo-локальная DTO: только она знает про формат хранения
+type metaJSON struct {
+    Color string   `json:"color"`
+    Tags  []string `json:"tags"`
+}
+
+type Select struct {
+    Id   string
+    Meta []byte // jsonb-колонка читаем как []byte
+}
+
+func (m *Select) ListColumnMap() map[string]any {
+    return map[string]any{
+        "id":   &m.Id,
+        "meta": &m.Meta,
+    }
+}
+
+func EncodeSelect(v *Select, _ int) *domainModel.Main {
+    out := &domainModel.Main{Id: v.Id}
+    if len(v.Meta) > 0 {
+        var meta metaJSON
+        _ = json.Unmarshal(v.Meta, &meta)
+        out.Color = meta.Color   // доменные поля — без тегов
+        out.Tags = meta.Tags
+    }
+    return out
+}
+```
+
+При записи `DecodeUpsert` симметрично собирает `metaJSON`, делает `json.Marshal` и кладёт `[]byte`
+(или `string`) в `CreateColumnMap` под ключ колонки.
+
+---
+
 ## repo.go — Repo, конструктор, CRUD
 
 ```go
