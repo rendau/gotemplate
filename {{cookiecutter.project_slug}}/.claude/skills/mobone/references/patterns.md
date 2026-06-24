@@ -78,17 +78,17 @@ func (m *Upsert) PKColumnMap() map[string]any        { return map[string]any{"id
 
 ```go
 // Create — id вернётся в m.PKId через RETURNING
-m := &Upsert{Name: lo.ToPtr("Test"), Flag: lo.ToPtr(true)}
+m := &Upsert{Name: new("Test"), Flag: new(true)}
 err := store.Create(ctx, m)
 newID := m.PKId
 
 // Partial Update — обновится только name
-err = store.Update(ctx, &Upsert{PKId: id, Name: lo.ToPtr("Updated")})
+err = store.Update(ctx, &Upsert{PKId: id, Name: new("Updated")})
 
 // Batch partial update — у каждой модели свой набор полей
 err = store.UpdateMany(ctx, []mobone.UpdateModelI{
-    &Upsert{PKId: id1, Name: lo.ToPtr("A")},
-    &Upsert{PKId: id2, Flag: lo.ToPtr(true)},
+    &Upsert{PKId: id1, Name: new("A")},
+    &Upsert{PKId: id2, Flag: new(true)},
 })
 
 // Get
@@ -115,7 +115,7 @@ func (m *UpsertWithPK) CreateColumnMap() map[string]any {
 
 ```go
 // INSERT ... ON CONFLICT (id) DO UPDATE SET name = ...
-err := store.UpdateOrCreate(ctx, &UpsertWithPK{PKId: id, Name: lo.ToPtr("X")})
+err := store.UpdateOrCreate(ctx, &UpsertWithPK{PKId: id, Name: new("X")})
 ```
 
 Для `CreateIfNotExist` PK добавляется библиотекой автоматически — туда подойдёт и обычный `Upsert`.

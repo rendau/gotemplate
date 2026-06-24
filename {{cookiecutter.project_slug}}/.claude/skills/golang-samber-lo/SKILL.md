@@ -163,7 +163,7 @@ results, err := lo.MapErr(urls, func(url string, _ int) (Response, error) {
 | `lo.Zip2` / `lo.Unzip2` | Pair/unpair two slices |
 | `lo.Range` / `lo.RangeFrom` | Generate number sequences |
 | `lo.Ternary` / `lo.If` | Inline conditionals |
-| `lo.ToPtr` / `lo.FromPtr` | Pointer helpers |
+| `lo.FromPtr` | Pointer deref (для указателя на значение используй `new(...)`, не `lo.ToPtr`) |
 | `lo.Must` / `lo.Try` | Panic-on-error / recover-as-bool |
 | `lo.Async` / `lo.Attempt` | Async execution / retry with backoff |
 | `lo.Debounce` / `lo.Throttle` | Rate limiting |

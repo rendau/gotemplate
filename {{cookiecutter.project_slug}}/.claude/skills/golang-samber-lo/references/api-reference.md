@@ -271,7 +271,7 @@ Most transform functions have `Err` suffixes: `MapErr`, `FlatMapErr`, `FilterErr
 
 | Function | Description |
 | --- | --- |
-| `lo.ToPtr(v)` | Value to pointer (`&v`) |
+| `lo.ToPtr(v)` | Value to pointer (`&v`) — в наших проектах используем `new(v)` вместо этого |
 | `lo.Nil[T]()` | Typed nil pointer |
 | `lo.EmptyableToPtr(v)` | Value to pointer, zero-value becomes nil |
 | `lo.FromPtr(p)` | Pointer to value (zero-value if nil) |
