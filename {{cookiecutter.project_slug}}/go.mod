@@ -1,6 +1,6 @@
 module {{ cookiecutter.__go_module }}
 
-go 1.26
+go 1.27
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
