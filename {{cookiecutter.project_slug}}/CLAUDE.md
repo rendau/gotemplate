@@ -26,7 +26,10 @@
   - `app.go` — граф зависимостей и запуск компонентов.
   - `grpc.go` — gRPC сервер + интерсепторы ошибок/метрик/трейсинга.
   - `grpc_gateway.go` — HTTP-gateway, CORS, error handler.
-  - `system_http_server.go` — системный HTTP-сервер (порт 3003): /healthcheck, /docs/*, /metrics.
+  - `system_http_server.go` — системный HTTP-сервер (порт 3003): /healthcheck, /docs/*, /metrics,
+    манифест для pulse.
+  - `manifest.go` — сведения о сервисе для манифеста pulse (от человека: название, описание, команда,
+    критичность).
   - `migration.go` — запуск миграций из `migrations/`.
 - `internal/config/` — конфигурация через env (см. `config.go`).
 - `internal/handler/` — транспортный слой.
@@ -40,7 +43,9 @@
   - `*/repo/` — репозитории.
   - `common/` — общие модели/утилиты/PG базовый репозиторий.
 - `internal/service/` — сервисы (фоновые/инфраструктурные), для переиспользования или выделения логики.
-- `internal/errs/` и `internal/constant/` — общие коды ошибок и константы.
+- `internal/infra/pulsekit/` — манифест сервиса для pulse (см. «Манифест для pulse»).
+- `internal/errs/` и `internal/constant/` — общие коды ошибок и константы (`Version`, `Commit`,
+  `BuiltAt` — из ldflags при сборке).
 
 ---
 
@@ -196,6 +201,22 @@ domain service → repo
 - Отдельный сервер на порту `3003` (`const systemHttpPort` в `internal/app/system_http_server.go`).
 - Обслуживает служебные ручки: `/healthcheck`, `/docs/*`, `/metrics`.
 
+### Манифест для pulse
+- Сервис сам рассказывает pulse о себе на системном порту: `/.well-known/pulse` (манифест),
+  `/.well-known/pulse/status` (состояние зависимостей), диагностические ручки `/diag/*`. Стандарт и
+  правила конфиденциальности — `github.com/mechta-market/pulse`, `docs/service-manifest.md`;
+  **агент, внедряющий манифест, сначала читает там раздел «Для агента»**.
+- Зависимость объявляется одной строкой рядом с созданием клиента в `app.go`:
+  `a.pulsekit.Depend("pg", "postgres", hostOf(config.Conf.PgDsn), true, a.pgpool.Ping)` — id, вид,
+  хост без учётных данных, критичность, проверка. Postgres объявлен в шаблоне.
+- Диагностическая ручка — `pulsekit.Handle(a.pulsekit, pulsekit.Endpoint{…}, fn)`: схема ответа
+  строится из типа ответа (json-теги; `pulse:"personal=phone"` у персональных полей,
+  `maxLength=`, `maxItems=`). Строковому параметру нужен `Pattern`, `Enum` или `Personal`; поля с
+  именами секретов запрещены — нарушение паникует при регистрации (видно в тестах). Ошибка для
+  человека — `pulsekit.Error{Status, Message}`, остальные ошибки наружу не уходят.
+- Только чтение, быстро, без побочных эффектов; в ответ — только то, что можно показать на общем
+  дашборде.
+
 ### Метрики и трассировка
 - Prometheus метрики на `/metrics` (системный сервер, порт 3003) при `WITH_METRICS=true`.
   Используется `metrics.Registry`, а не дефолтный `promhttp.Handler()`.
@@ -206,7 +227,8 @@ domain service → repo
 - `/docs/*` — статические docs + swagger (`docs/api.swagger.json`), порт 3003.
 
 ### Сборка
-- `make build` создаёт бинарник `cmd/build/svc`.
+- `make build` создаёт бинарник `cmd/build/svc` (версия, полный коммит и время сборки — в ldflags:
+  `build` манифеста).
 - Dockerfile копирует бинарник, `docs/` и `migrations/` в `/app`.
 
 ### Flow проверки изменений

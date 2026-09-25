@@ -13,9 +13,11 @@ import (
 const systemHttpPort = 3003
 
 // SystemHttpServerCreate builds the system HTTP server that exposes
-// service endpoints: /healthcheck, /docs/*, /metrics.
-func SystemHttpServerCreate() *http.Server {
+// service endpoints: /healthcheck, /docs/*, /metrics and the pulse manifest
+// (/.well-known/pulse, /.well-known/pulse/status, /diag/*).
+func SystemHttpServerCreate(register func(mux *http.ServeMux)) *http.Server {
 	mux := http.NewServeMux()
+	register(mux)
 
 	// healthcheck
 	mux.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {

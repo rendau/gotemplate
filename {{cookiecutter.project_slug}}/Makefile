@@ -2,6 +2,13 @@
 
 BINARY_NAME = svc
 BUILD_PATH = cmd/build
+# сборка для манифеста сервиса (pulse): версия, полный коммит, время сборки
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
+BUILT_AT ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS = -X {{ cookiecutter.__go_module }}/internal/constant.Version=$(VERSION) \
+	-X {{ cookiecutter.__go_module }}/internal/constant.Commit=$(COMMIT) \
+	-X {{ cookiecutter.__go_module }}/internal/constant.BuiltAt=$(BUILT_AT)
 SERVICE_NAME = {{ cookiecutter.__proto_pkg }}
 
 # vendor repo sparse dirs
@@ -12,7 +19,7 @@ vendor-proto-dirs = vp-common
 
 build:
 	mkdir -p $(BUILD_PATH)
-	CGO_ENABLED=0 go build -o $(BUILD_PATH)/$(BINARY_NAME) cmd/main.go
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o $(BUILD_PATH)/$(BINARY_NAME) cmd/main.go
 
 clean:
 	rm -rf $(BUILD_PATH)

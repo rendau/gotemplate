@@ -21,12 +21,16 @@ import (
 
 	"{{ cookiecutter.__go_module }}/internal/config"
 	"{{ cookiecutter.__go_module }}/internal/constant"
+	"{{ cookiecutter.__go_module }}/internal/infra/pulsekit"
 )
 
 type App struct {
 	globalTracerCloser io.Closer
 
 	pgpool *pgxpool.Pool
+
+	// pulsekit — манифест сервиса для pulse и фоновые проверки зависимостей (ручка состояния)
+	pulsekit *pulsekit.Kit
 
 	grpcServer       *GrpcServer
 	httpServer       *http.Server
@@ -55,9 +59,13 @@ func (a *App) Init() {
 		}
 	}
 
+	// pulsekit (манифест для pulse: зависимости объявляются рядом с созданием клиентов)
+	a.pulsekit = newPulsekit()
+
 	// pgpool
 	a.pgpool, err = initPgPool(config.Conf.PgDsn)
 	errCheck(err, "pgpool init")
+	a.pulsekit.Depend("pg", "postgres", hostOf(config.Conf.PgDsn), true, a.pgpool.Ping)
 
 	// migrations
 	{
@@ -130,7 +138,7 @@ func (a *App) Init() {
 
 	// system http server (healthcheck, docs, metrics)
 	{
-		a.systemHttpServer = SystemHttpServerCreate()
+		a.systemHttpServer = SystemHttpServerCreate(a.pulsekit.Register)
 	}
 }
 
@@ -140,6 +148,9 @@ func (a *App) PreStartHook() {
 
 func (a *App) Start() {
 	slog.Info("Starting")
+
+	// pulsekit (фоновые проверки зависимостей)
+	a.pulsekit.Start(a.ctx)
 
 	// grpc server
 	{
@@ -212,6 +223,9 @@ func (a *App) Stop() {
 
 func (a *App) WaitJobs() {
 	slog.Info("waiting jobs")
+
+	// pulsekit
+	a.pulsekit.Wait()
 }
 
 func (a *App) Exit() {
