@@ -39,4 +39,7 @@ jobs:
         working-directory: /tmp/out/myservice
         run: |
           ! grep -rn 'mechta-market/gotemplate' . --include='*.go' go.mod
+          # cookiecutter не рендерит файлы, которые считает двоичными (много кириллицы в
+          # первом килобайте) — плейсхолдеры остаются как есть
+          ! grep -rn 'cookiecutter\.' . --include='*.go' --include='*.mod' --include='*.yml' --include='*.yaml' --include='Makefile' --include='Dockerfile'
           test -d api/proto/myservice_v1

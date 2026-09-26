@@ -207,13 +207,19 @@ domain service → repo
   правила конфиденциальности — `github.com/mechta-market/pulse`, `docs/service-manifest.md`;
   **агент, внедряющий манифест, сначала читает там раздел «Для агента»**.
 - Зависимость объявляется одной строкой рядом с созданием клиента в `app.go`:
-  `a.pulsekit.Depend("pg", "postgres", hostOf(config.Conf.PgDsn), true, a.pgpool.Ping)` — id, вид,
-  хост без учётных данных, критичность, проверка. Postgres объявлен в шаблоне.
+  `a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping)` — id,
+  вид, хост, критичность, проверка. Адрес из конфигурации — только через `pulsekit.Host` (URL, DSN
+  `host=… password=…`, `dns:///`, `host:port` → только хост). Postgres объявлен в шаблоне.
+- Показатели состояния — `a.pulsekit.Gauge`/`GaugeTime` (глубина очереди, последняя выгрузка);
+  свои метрики — `Metric`, узнаваемые ошибки в логах — `ErrorPattern`, инструкции — `Service.Runbooks`.
 - Диагностическая ручка — `pulsekit.Handle(a.pulsekit, pulsekit.Endpoint{…}, fn)`: схема ответа
-  строится из типа ответа (json-теги; `pulse:"personal=phone"` у персональных полей,
-  `maxLength=`, `maxItems=`). Строковому параметру нужен `Pattern`, `Enum` или `Personal`; поля с
-  именами секретов запрещены — нарушение паникует при регистрации (видно в тестах). Ошибка для
-  человека — `pulsekit.Error{Status, Message}`, остальные ошибки наружу не уходят.
+  строится из типа ответа (json-теги; тег `pulse:"personal=phone,maxLength=…,maxItems=…,enum=a|b,description=…"`,
+  description — последним, запятые можно). Строковому параметру нужен `Pattern`, `Enum` или
+  `Personal`; поля с именами секретов и тексты длиннее лимитов (100/500) запрещены — нарушение
+  паникует при регистрации (видно в тестах). Ошибка для человека — `pulsekit.Error{Status, Message}`,
+  остальные ошибки наружу не уходят; своё сообщение из ошибки — `pulsekit.Describe(err)`.
+- Вызов ручки pulsekit пишет в лог сам (с `X-Pulse-Request-Id`); для своих строк —
+  `pulsekit.RequestId(ctx)`. Тест ручки — `kit.CheckEndpoint(id, params)`: ответ сверяется со схемой.
 - Только чтение, быстро, без побочных эффектов; в ответ — только то, что можно показать на общем
   дашборде.
 
