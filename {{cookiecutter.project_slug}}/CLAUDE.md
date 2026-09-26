@@ -210,6 +210,8 @@ domain service → repo
   `a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping)` — id,
   вид, хост, критичность, проверка. Адрес из конфигурации — только через `pulsekit.Host` (URL, DSN
   `host=… password=…`, `dns:///`, `host:port` → только хост). Postgres объявлен в шаблоне.
+- Что ломает зависимость — `Depend(…).Affects("выдача заказов")`; платный API или API без
+  health-ручки — пассивная проверка `pulsekit.NewPassive` (исходы настоящих вызовов, `Observe(err)`).
 - Показатели состояния — `a.pulsekit.Gauge`/`GaugeTime` (глубина очереди, последняя выгрузка);
   свои метрики — `Metric`, узнаваемые ошибки в логах — `ErrorPattern`, инструкции — `Service.Runbooks`.
 - Диагностическая ручка — `pulsekit.Handle(a.pulsekit, pulsekit.Endpoint{…}, fn)`: схема ответа

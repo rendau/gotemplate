@@ -65,7 +65,7 @@ func (a *App) Init() {
 	// pgpool
 	a.pgpool, err = initPgPool(config.Conf.PgDsn)
 	errCheck(err, "pgpool init")
-	a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping)
+	a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping).Affects("весь сервис")
 
 	// migrations
 	{
