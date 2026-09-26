@@ -18,17 +18,22 @@ jobs:
       - name: Install cookiecutter
         run: pipx install cookiecutter
 
+      # команду и описание сервиса (манифест pulse) хук требует от человека — в CI задаём явно
       - name: Render with defaults
-        run: cookiecutter . --no-input -o /tmp/out
+        run: cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона"
 
       - name: Render with custom values
-        run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme
+        run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme owner_team=platform service_description="Заказы" criticality=high
+
+      - name: Render without service info must fail
+        run: "! cookiecutter . --no-input -o /tmp/out-empty"
 
       - name: Build generated project (defaults)
         working-directory: /tmp/out/myservice
         run: |
           go build ./...
           go vet ./...
+          go test ./internal/infra/pulsekit/...
 
       - name: Assert no leftover template names
         working-directory: /tmp/out/myservice

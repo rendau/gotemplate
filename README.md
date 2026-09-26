@@ -69,6 +69,6 @@ Makefile, Dockerfile, CI, а также skill `crud` в `.claude/skills/` для
 ### Локальная проверка
 
 ```bash
-cookiecutter . --no-input -o /tmp/out
+cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона"
 cd /tmp/out/myservice && go build ./...
 ```
