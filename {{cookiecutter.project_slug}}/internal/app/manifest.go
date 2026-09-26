@@ -16,5 +16,8 @@ func newPulsekit() *pulsekit.Kit {
 		OwnerTeam:   "{{ cookiecutter.owner_team }}",
 		Criticality: "{{ cookiecutter.criticality }}",
 		RepoUrl:     "https://{{ cookiecutter.__go_module }}",
+		// Domain: business meaning for the agent (responsibilities, entities with id format and
+		// statuses, typical questions) - see pulsekit.ExampleDomain and the standard, section domain.
+		Domain: nil,
 	}, pulsekit.Build{Version: constant.Version, Commit: constant.Commit, BuiltAt: constant.BuiltAt})
 }
