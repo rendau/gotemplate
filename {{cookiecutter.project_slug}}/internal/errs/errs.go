@@ -55,3 +55,26 @@ func AsErrFull(err error) (ErrFull, bool) {
 	}
 	return ErrFull{}, false
 }
+
+// Code — код ошибки ответа для метрик и логов: errs.Err сервиса (в том числе внутри ErrFull), для
+// прочих ошибок — service_not_available. Набор кодов конечен — годится в лейбл метрики.
+func Code(err error) string {
+	if fullErr, ok := AsErrFull(err); ok {
+		err = fullErr.Err
+	}
+	if baseErr, ok := AsErr(err); ok {
+		return baseErr.Error()
+	}
+	return ServiceNA.Error()
+}
+
+// IsFailure — код значит сбой сервиса (упала зависимость, неожиданная ошибка, не настроен), а не
+// отказ по делу (не найдено, неверный запрос, нет прав). По нему pulse делит ошибки в метриках
+// на error_rate и rejected_rate.
+func IsFailure(code string) bool {
+	switch Err(code) {
+	case ServiceNA, NotImplemented, InvalidConfig:
+		return true
+	}
+	return false
+}

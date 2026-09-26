@@ -18,6 +18,7 @@ func init() {
 		"protocol",
 		"method",
 		"status",
+		"code", // ok или errs.Code: сбой (errs.IsFailure) отличается от отказа по делу
 	})
 
 	metricResponseDuration = metrics.Factory.NewHistogramVec(prometheus.HistogramOpts{

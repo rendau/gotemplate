@@ -139,12 +139,12 @@ func GrpcInterceptorMetrics() grpc.UnaryServerInterceptor {
 
 		h, err := handler(ctx, req)
 
-		responseStatus := "ok"
+		responseStatus, code := "ok", "ok"
 		if err != nil {
-			responseStatus = "error"
+			responseStatus, code = "error", errs.Code(err)
 		}
 
-		metricRequestCounter.WithLabelValues("grpc", info.FullMethod, responseStatus).Inc()
+		metricRequestCounter.WithLabelValues("grpc", info.FullMethod, responseStatus, code).Inc()
 		metricResponseDuration.WithLabelValues("grpc", info.FullMethod).Observe(time.Since(start).Seconds())
 
 		return h, err
@@ -183,7 +183,14 @@ func GrpcInterceptorError() grpc.UnaryServerInterceptor {
 			}
 		}
 
-		slog.Info(
+		// сбой — уровнем error, отказ по делу (не найдено, неверный запрос) — info
+		level := slog.LevelInfo
+		if errs.IsFailure(errs.Code(err)) {
+			level = slog.LevelError
+		}
+		slog.Log(
+			ctx,
+			level,
 			"GRPC handler error",
 			slog.String("error", errStr),
 			slog.String("method", info.FullMethod),

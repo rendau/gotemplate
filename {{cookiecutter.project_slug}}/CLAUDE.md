@@ -109,6 +109,10 @@ domain service → repo
 
 ### Ошибки и валидация
 - Семантические ошибки — через `internal/errs` (см. gRPC interceptor в `internal/app/grpc.go`).
+  Отказ по делу (не найдено, неверный запрос, неверный код) — всегда `errs.Err` (свой код сервиса
+  или общий): такой ответ пишется в лог уровнем info и в метрике `request_total` получает свой
+  `code`, pulse показывает его как `rejected_rate`, а не сбой. Любая другая ошибка —
+  `service_not_available` (`errs.IsFailure`): лог уровнем error, `error_rate`.
 - Валидация параметров — в usecase.
 - Нельзя пробрасывать ошибки наружу без wrapping (оборачивать в `fmt.Errorf("...: %w")`).
 - Для работы с ошибками всегда используй `errors.Is` и `errors.AsType`. Избегай прямого
@@ -230,6 +234,9 @@ domain service → repo
 ### Метрики и трассировка
 - Prometheus метрики на `/metrics` (системный сервер, порт 3003) при `WITH_METRICS=true`.
   Используется `metrics.Registry`, а не дефолтный `promhttp.Handler()`.
+- `request_total{protocol, method, status, code}`: `status` — ok|error, `code` — ok или код
+  ошибки ответа (`errs.Code`, набор конечен). Лейблы не убирать: по `code` pulse отличает сбои
+  от отказов по делу.
 - Трейсинг Jaeger включается при `WITH_TRACING=true` и `JAEGER_ADDRESS`.
 
 ### Документация и healthcheck
