@@ -218,8 +218,9 @@ domain service → repo
 - Диагностическая ручка — `pulsekit.Handle(a.pulsekit, pulsekit.Endpoint{…}, fn)`: схема ответа
   строится из типа ответа (json-теги; тег `pulse:"personal=phone,maxLength=…,maxItems=…,enum=a|b,description=…"`,
   description — последним, запятые можно). Строковому параметру нужен `Pattern`, `Enum` или
-  `Personal`; поля с именами секретов и тексты длиннее лимитов (100/500) запрещены — нарушение
-  паникует при регистрации (видно в тестах). Ошибка для человека — `pulsekit.Error{Status, Message}`,
+  `Personal`; поля с именами секретов запрещены. Нарушение не роняет сервис: ручка не публикуется,
+  причина — в лог и `kit.Problems()` (тест манифеста требует пустой список); длинные тексты —
+  `kit.Warnings()`. Ошибка для человека — `pulsekit.Error{Status, Message}`,
   остальные ошибки наружу не уходят; своё сообщение из ошибки — `pulsekit.Describe(err)`.
 - Вызов ручки pulsekit пишет в лог сам (с `X-Pulse-Request-Id`); для своих строк —
   `pulsekit.RequestId(ctx)`. Тест ручки — `kit.CheckEndpoint(id, params)`: ответ сверяется со схемой.
