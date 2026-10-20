@@ -34,7 +34,8 @@
 - `internal/config/` — конфигурация через env (см. `config.go`).
 - `internal/handler/` — транспортный слой.
   - `grpc/` — gRPC handlers.
-  - `grpc/dto/` — преобразование protobuf ↔ domain models.
+  - `grpc/dto/` — преобразование protobuf ↔ domain models; общие хелперы — `dto/common.go`
+    (`DecodeListParams`, `JsonObjToGrpcStruct`, `GrpcStructToJsonObj`).
   - могут быть и другие транспортные каналы.
 - `internal/usecase/` — usecase-слой (валидация, оркестрация сервисов и доменных сервисов).
 - `internal/domain/` — доменная модель, сервисы и репозитории.
@@ -53,13 +54,16 @@
 ## Архитектура: слои и зависимости
 
 - **Transport** (`internal/handler/grpc/*`):
-  - Работает только с protobuf DTO и usecase-интерфейсами.
+  - Работает только с protobuf DTO и usecase-слоем: handler подключает `*usecase.Usecase` напрямую,
+    без интерфейса (handler тонкий, отдельно не тестируется).
   - Не обращается напрямую к репозиториям и сервисам.
 - **Usecase** (`internal/usecase/*`):
   - Входной слой от транспортного слоя (запросы от внешних систем).
   - Валидация входных параметров.
   - Оркестрация доменных сервисов и сервисов `internal/service/*`.
   - Вход/выход — доменные модели (не protobuf).
+  - Зависимости (доменные сервисы, сервисы) принимает через интерфейсы, объявленные в своём
+    пакете (`interfaces.go`).
   - Желательно не обращается в соседние usecases.
 - **Domain** (`internal/domain/*`):
   - `model/` — структуры данных, сущности (entity).
