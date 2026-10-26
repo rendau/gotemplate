@@ -20,10 +20,20 @@ jobs:
 
       # команду и описание сервиса (манифест pulse) хук требует от человека — в CI задаём явно
       - name: Render with defaults
-        run: cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона"
+        run: cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона" install_skills=no
+
+      - name: Skills are not installed when declined
+        run: test ! -e ~/.claude/skills/crud
 
       - name: Render with custom values
         run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme owner_team=platform service_description="Заказы" criticality=high
+
+      # install_skills по умолчанию — да: hook клонирует go-service-skill и запускает install.sh
+      - name: Skills are installed by default
+        run: |
+          for s in crud golang-service mobone golang-samber-lo; do
+            test -f ~/.claude/skills/$s/SKILL.md
+          done
 
       - name: Render without service info must fail
         run: "! cookiecutter . --no-input -o /tmp/out-empty"

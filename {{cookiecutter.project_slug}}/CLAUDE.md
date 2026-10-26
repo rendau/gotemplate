@@ -5,6 +5,8 @@
 
 Конвенции этого стека вынесены в глобальные Claude Code скиллы (`crud`, `mobone`,
 `golang-service`, `golang-samber-lo`) — они подхватываются автоматически по описанию.
+Ставятся из `github.com/rendau/go-service-skill` (`install.sh`); если их нет в списке скиллов —
+предложи разработчику установить.
 
 ---
 
