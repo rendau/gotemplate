@@ -1,6 +1,6 @@
 {
   "project_slug": "myservice",
-  "module_owner": "github.com/mechta-market",
+  "module_owner": "github.com/rendau",
   "service_title": "{{ cookiecutter.project_slug }}",
   "service_description": "Что делает сервис (для каталога pulse и агентов)",
   "owner_team": "",

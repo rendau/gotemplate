@@ -5,7 +5,7 @@ import (
 	"{{ cookiecutter.__go_module }}/internal/infra/pulsekit"
 )
 
-// newPulsekit: service manifest for pulse (github.com/mechta-market/pulse, docs/service-manifest.md).
+// newPulsekit: service manifest for pulse (github.com/rendau/pulse, docs/service-manifest.md).
 // Dependencies: a.pulsekit.Depend in app.go; endpoints: pulsekit.Handle.
 // Сведения ниже — от человека: агент уточняет их у разработчика.
 func newPulsekit() *pulsekit.Kit {

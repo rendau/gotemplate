@@ -14,7 +14,7 @@ proto-генерация через Makefile). Используется для �
 
 из GitHub:
 ```bash
-cookiecutter gh:mechta-market/gotemplate
+cookiecutter gh:rendau/gotemplate
 ```
 
 или из локальной копии:
@@ -27,14 +27,14 @@ cookiecutter /path/to/gotemplate
 | Переменная | Значение по умолчанию | Что задаёт |
 |---|---|---|
 | `project_slug` | `myservice` | имя сервиса — Go-модуль, `ServiceName`, имя proto-пакета (`<slug>_v1`), docker-образ, имя БД |
-| `module_owner` | `github.com/mechta-market` | префикс Go-модуля и owner для CI-образа |
+| `module_owner` | `github.com/rendau` | префикс Go-модуля и owner для CI-образа |
 | `service_title` | `<project_slug>` | человеческое название для каталога pulse |
 | `service_description` | — (обязательно) | что делает сервис: словами, по которым его будут искать люди и агенты |
 | `owner_team` | — (обязательно) | команда-владелец, одинаково во всех сервисах команды |
 | `criticality` | `low` | `low` — внутреннее, `medium` — деградация заметна клиентам, `high` — без него не работают продажи/выдача |
 
 Последние четыре — для манифеста сервиса (`internal/app/manifest.go`): по нему pulse узнаёт о
-сервисе сам (стандарт — `github.com/mechta-market/pulse`, `docs/service-manifest.md`). Без команды и
+сервисе сам (стандарт — `github.com/rendau/pulse`, `docs/service-manifest.md`). Без команды и
 описания генерация останавливается; кавычки в них не допускаются.
 
 Из них автоматически выводится всё остальное (производные переменные `_*`):

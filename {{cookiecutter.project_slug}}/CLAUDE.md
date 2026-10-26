@@ -213,7 +213,7 @@ domain service → repo
 ### Манифест для pulse
 - Сервис сам рассказывает pulse о себе на системном порту: `/.well-known/pulse` (манифест),
   `/.well-known/pulse/status` (состояние зависимостей), диагностические ручки `/diag/*`. Стандарт и
-  правила конфиденциальности — `github.com/mechta-market/pulse`, `docs/service-manifest.md`;
+  правила конфиденциальности — `github.com/rendau/pulse`, `docs/service-manifest.md`;
   **агент, внедряющий манифест, сначала читает там раздел «Для агента»**.
 - Зависимость объявляется одной строкой рядом с созданием клиента в `app.go`:
   `a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping)` — id,
