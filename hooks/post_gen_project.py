@@ -17,6 +17,29 @@ def run(cmd):
         return False
 
 
+def find_protos_repo():
+    """The organization's protos repo (<module_owner>/protos over SSH) if it is reachable now."""
+    host, _, owner = "{{ cookiecutter.module_owner }}".partition("/")
+    if not owner or not shutil.which("git"):
+        return ""
+    url = "git@%s:%s/protos.git" % (host, owner)
+    # no prompts for keys or passwords: unreachable is the same as absent
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5")
+    try:
+        cmd = ["git", "ls-remote", "--exit-code", "-q", url, "HEAD"]
+        subprocess.run(cmd, env=env, check=True, timeout=20, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        return ""
+    return url
+
+
+def set_protos_repo(url):
+    """Write the protos repo into the service Makefile (PROTOS_REPO)."""
+    makefile = Path("Makefile")
+    lines = makefile.read_text().splitlines(keepends=True)
+    makefile.write_text("".join("PROTOS_REPO = %s\n" % url if line.startswith("PROTOS_REPO =") else line for line in lines))
+
+
 def ask(question, default):
     """Ask in the terminal; without one (CI, --no-input) take the default."""
     if not sys.stdin.isatty():
@@ -72,16 +95,25 @@ def install_skills():
 print("\nProject '{{ cookiecutter.project_slug }}' generated.")
 print("Module: {{ cookiecutter.__go_module }}\n")
 
+# Shared protos: the organization's protos repo, if reachable — before the initial commit (Makefile).
+protos_repo = find_protos_repo()
+if protos_repo:
+    set_protos_repo(protos_repo)
+    print("Shared protos: %s (make refresh-vendor-proto)" % protos_repo)
+else:
+    print("Shared protos: from the template (no {{ cookiecutter.module_owner }}/protos repo reachable over SSH)")
+
+# Tidy go modules before the initial commit, so it includes go.mod/go.sum
+# (best-effort: needs `go` and network access).
+if shutil.which("go"):
+    print("Running 'go mod tidy' (best-effort)...")
+    run(["go", "mod", "tidy"])
+
 # Initialize a fresh git repository with an initial commit (best-effort).
 if shutil.which("git"):
     if run(["git", "init", "-q"]):
         run(["git", "add", "-A"])
         run(["git", "commit", "-q", "-m", "Initial commit from gotemplate"])
-
-# Tidy go modules (best-effort: needs `go` and network access).
-if shutil.which("go"):
-    print("Running 'go mod tidy' (best-effort)...")
-    run(["go", "mod", "tidy"])
 
 # Claude Code skills for this stack (best-effort, asked at generation: install_skills).
 skills_wanted = "{{ cookiecutter.install_skills }}".strip().lower() in ("true", "yes", "y", "1")
@@ -89,8 +121,14 @@ if skills_wanted and not install_skills():
     print("\nSkills were not installed. To install them later:")
     print("  git clone %s <folder> && <folder>/install.sh" % SKILLS_REPO)
 
+steps = [
+    "add your .proto files under api/proto/{{ cookiecutter.__proto_pkg }}/",
+    "make generate-proto",
+    "make build",
+]
+if protos_repo:
+    steps.insert(0, "make refresh-vendor-proto   # refresh shared protos from %s" % protos_repo)
 print("\nNext steps:")
-print("  1. make refresh-vendor-proto   # refresh shared protos (needs SSH to the protos repo)")
-print("  2. add your .proto files under api/proto/{{ cookiecutter.__proto_pkg }}/")
-print("  3. make generate-proto")
-print("  4. make build\n")
+for i, step in enumerate(steps, 1):
+    print("  %d. %s" % (i, step))
+print()

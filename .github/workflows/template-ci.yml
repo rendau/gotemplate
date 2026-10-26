@@ -28,6 +28,13 @@ jobs:
       - name: Render with custom values
         run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme owner_team=platform service_description="Заказы" criticality=high
 
+      # у раннера нет SSH-доступа к <owner>/protos — остаются protos из шаблона
+      - name: No protos repo without access
+        run: |
+          grep -qx 'PROTOS_REPO =' /tmp/out/myservice/Makefile
+          grep -qx 'PROTOS_REPO =' /tmp/out-custom/orders/Makefile
+          ! make -C /tmp/out/myservice refresh-vendor-proto
+
       # install_skills по умолчанию — да: hook клонирует go-service-skill и запускает install.sh
       - name: Skills are installed by default
         run: |
@@ -44,6 +51,30 @@ jobs:
           go build ./...
           go vet ./...
           go test ./internal/app/ ./internal/infra/pulsekit/...
+
+      # локальный тулчейн из bin/ (Makefile вызывает только его); пробный .proto с HTTP/swagger-
+      # аннотациями и общими типами — сгенерированный код должен собираться
+      - name: Generate proto with the local toolchain
+        working-directory: /tmp/out/myservice
+        run: |
+          cat > api/proto/myservice_v1/ping.proto <<'EOF'
+          syntax = "proto3";
+          package myservice_v1;
+          option go_package = "/myservice_v1";
+          import "google/api/annotations.proto";
+          import "protoc-gen-openapiv2/options/annotations.proto";
+          import "common/common.proto";
+          option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {info: {title: "myservice"}};
+          service Ping {
+            rpc Ping(common.ListParamsSt) returns (common.ErrorRep) {
+              option (google.api.http) = {get: "/ping"};
+            }
+          }
+          EOF
+          make generate-proto
+          make proto-tools-version
+          go build ./...
+          git diff --exit-code -- pkg/proto/common
 
       - name: Assert no leftover template names
         working-directory: /tmp/out/myservice

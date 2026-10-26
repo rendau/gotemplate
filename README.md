@@ -9,6 +9,8 @@ proto-генерация через Makefile). Используется для �
 - [Cookiecutter](https://cookiecutter.readthedocs.io/): `pipx install cookiecutter`
   (или `brew install cookiecutter`)
 - Go (для сборки сгенерированного проекта)
+- `curl` и `unzip` — `make generate-proto` сам скачивает `protoc` и плагины закреплённых версий
+  в `bin/` сервиса; ставить их глобально не нужно
 
 ## Генерация нового сервиса
 
@@ -49,10 +51,30 @@ cookiecutter /path/to/gotemplate
 Имя бинаря **статично** = `svc` (Makefile `BINARY_NAME`, Dockerfile `CMD`, `.gitignore`) —
 одинаковое во всех проектах.
 
-После генерации `post_gen` hook инициализирует git-репозиторий, делает первый коммит,
-запускает `go mod tidy` и, если на вопрос `install_skills` ответили «да», ставит скиллы
+После генерации `post_gen` hook запускает `go mod tidy`, инициализирует git-репозиторий,
+делает первый коммит (уже с итоговыми `go.mod`/`go.sum`) и, если на вопрос `install_skills` ответили «да», ставит скиллы
 Claude Code. `go mod tidy` и установка скиллов — best-effort: если не получилось (нет сети,
 нет `go`/`git`), сервис всё равно сгенерирован, а hook подсказывает, как доделать руками.
+
+## Общие proto
+
+Сервис использует общие `.proto`: `google/api` и `protoc-gen-openapiv2` (аннотации HTTP-ручек
+и swagger) и `common/common.proto` (`ErrorRep`, `ListParamsSt`). Все они уже лежат в шаблоне
+в `vendor-proto/`, так что сервис собирается без внешних репозиториев.
+
+Обновлять их можно из общего репозитория `protos` организации — так `common.proto` остаётся
+одинаковым у всех её сервисов, и они понимают ошибки друг друга. Договорённость такая: этот
+репозиторий называется `protos` и лежит у владельца из `module_owner`. При генерации hook
+проверяет SSH-доступ к `git@<хост>:<владелец>/protos.git` (например, для
+`module_owner = github.com/acme` — `git@github.com:acme/protos.git`):
+
+- доступ есть — адрес записывается в `PROTOS_REPO` в начале `Makefile` сервиса, и
+  `make refresh-vendor-proto` обновляет `vendor-proto/` оттуда;
+- репозитория нет или нет доступа — `PROTOS_REPO` пустой, `vendor-proto/` обновляется
+  вместе с шаблоном. Указать репозиторий позже: `make refresh-vendor-proto PROTOS_REPO=<git-url>`
+  или вписать его в `PROTOS_REPO`.
+
+Проверка ничего не спрашивает (ни пароля, ни ключа) и не ждёт дольше нескольких секунд.
 
 ## Скиллы Claude Code
 

@@ -19,7 +19,8 @@
 - `pkg/proto/` — сгенерированный код protobuf/grpc/gateway (**не редактировать вручную**).
 - `migrations/` — SQL миграции Postgres.
 - `docs/` — swagger JSON и статические доки, выдаются через `/docs/*`.
-- `vendor-proto/` — внешние `.proto` зависимости (обновляются Makefile).
+- `vendor-proto/` — внешние `.proto` зависимости (`make refresh-vendor-proto` из `PROTOS_REPO`
+  в `Makefile`; пустой — обновляются только вместе с шаблоном).
 - `Dockerfile`, `Makefile` — сборка, запуск, генерация proto.
 - `.env.example`, `.migrate_scripts.example` — примеры окружения и миграций.
 
@@ -128,6 +129,10 @@ domain service → repo
 ### Правила изменения кода
 - gRPC DTO не должны протекать в доменные сервисы.
 - `pkg/proto` и `docs/api.swagger.json` — генерируемые файлы (обновляются через Makefile).
+- Генерация идёт только локальным тулчейном из `bin/` (в `.gitignore`): `make proto-tools` ставит
+  protoc и плагины закреплённых версий (protoc — `PROTOC_VERSION` в Makefile, protoc-gen-go и
+  grpc-gateway — версий из `go.mod`), `generate-proto` вызывает его сам. Глобальные protoc/плагины
+  не используются; версии поднимаем правкой Makefile/`go.mod`, всей командой сразу.
 - В тестах всегда предпочитай `testify`: `require` для проверок, прерывающих тест,
   и `assert` для остальных утверждений.
 - При реализации worker pool / параллельной обработки используй `errgroup`

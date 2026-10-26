@@ -30,11 +30,16 @@ migrate create -ext sql -dir migrations mg_name
 migrate -path migrations -database "postgres://localhost:5432/db_name?sslmode=disable" up
 ```
 
-### Install grpc tools:
+### Proto generation:
 
 ```
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
-go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
+make generate-proto
+```
+
+The proto toolchain lives in `bin/` (git-ignored) and is installed by `make proto-tools`, which
+`generate-proto` runs first: `protoc` of the version pinned in the Makefile (`PROTOC_VERSION`) and
+plugins of the versions from `go.mod`. Global `protoc` and plugins are not used. Installed versions:
+
+```
+make proto-tools-version
 ```

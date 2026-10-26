@@ -18,3 +18,6 @@ cover.html
 /*.custom
 .DS_Store
 .gocache
+
+# локальный тулчейн proto (make proto-tools)
+/bin/
