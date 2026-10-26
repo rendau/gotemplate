@@ -13,7 +13,7 @@ require (
 	github.com/opentracing-contrib/go-grpc v0.1.3
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/rendau/mobone/v2 v2.2.0
+	github.com/rendau/mobone/v2 v2.2.1
 	github.com/rs/cors v1.11.1
 	github.com/samber/lo v1.53.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
