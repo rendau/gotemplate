@@ -69,8 +69,8 @@ func Code(err error) string {
 }
 
 // IsFailure — код значит сбой сервиса (упала зависимость, неожиданная ошибка, не настроен), а не
-// отказ по делу (не найдено, неверный запрос, нет прав). По нему pulse делит ошибки в метриках
-// на error_rate и rejected_rate.
+// отказ по делу (не найдено, неверный запрос, нет прав). По нему метрики отделяют сбои от
+// отказов по делу (метка code в request_total).
 func IsFailure(code string) bool {
 	switch Err(code) {
 	case ServiceNA, NotImplemented, InvalidConfig:

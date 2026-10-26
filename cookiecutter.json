@@ -1,14 +1,6 @@
 {
   "project_slug": "myservice",
   "module_owner": "github.com/rendau",
-  "service_title": "{{ cookiecutter.project_slug }}",
-  "service_description": "Что делает сервис (для каталога pulse и агентов)",
-  "owner_team": "",
-  "criticality": [
-    "low",
-    "medium",
-    "high"
-  ],
   "install_skills": true,
   "__prompts__": {
     "install_skills": "Установить скиллы Claude Code (go-service-skill)?"

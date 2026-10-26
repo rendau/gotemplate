@@ -2,7 +2,7 @@
 
 BINARY_NAME = svc
 BUILD_PATH = cmd/build
-# сборка для манифеста сервиса (pulse): версия, полный коммит, время сборки
+# сведения о сборке (internal/constant): версия, полный коммит, время сборки
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null)
 BUILT_AT ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)

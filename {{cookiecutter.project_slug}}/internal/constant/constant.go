@@ -6,8 +6,8 @@ const (
 	MaxPageSize = 1000
 )
 
-// Version, Commit, BuiltAt подставляются при сборке (Makefile, ldflags): манифест сервиса для
-// pulse, build.commit — полный SHA коммита в проде.
+// Version, Commit, BuiltAt подставляются при сборке (Makefile, ldflags): что именно запущено —
+// версия, полный SHA коммита, время сборки (пишутся в лог при старте).
 var (
 	Version = "dev"
 	Commit  = ""

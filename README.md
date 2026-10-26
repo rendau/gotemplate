@@ -30,15 +30,7 @@ cookiecutter /path/to/gotemplate
 |---|---|---|
 | `project_slug` | `myservice` | имя сервиса — Go-модуль, `ServiceName`, имя proto-пакета (`<slug>_v1`), docker-образ, имя БД |
 | `module_owner` | `github.com/rendau` | префикс Go-модуля и owner для CI-образа |
-| `service_title` | `<project_slug>` | человеческое название для каталога pulse |
-| `service_description` | — (обязательно) | что делает сервис: словами, по которым его будут искать люди и агенты |
-| `owner_team` | — (обязательно) | команда-владелец, одинаково во всех сервисах команды |
-| `criticality` | `low` | `low` — внутреннее, `medium` — деградация заметна клиентам, `high` — без него не работают продажи/выдача |
 | `install_skills` | `y` | ставить ли скиллы Claude Code для этого стека — см. [Скиллы Claude Code](#скиллы-claude-code) |
-
-`service_title`, `service_description`, `owner_team` и `criticality` — для манифеста сервиса (`internal/app/manifest.go`): по нему pulse узнаёт о
-сервисе сам (стандарт — `github.com/rendau/pulse`, `docs/service-manifest.md`). Без команды и
-описания генерация останавливается; кавычки в них не допускаются.
 
 Из них автоматически выводится всё остальное (производные переменные `_*`):
 
@@ -117,6 +109,10 @@ go-service-skill/install.sh
 Makefile, Dockerfile, CI и `.claude/settings.json`. Скиллов в самом проекте нет — они
 глобальные, см. [Скиллы Claude Code](#скиллы-claude-code).
 
+Интеграции с [pulse](https://github.com/rendau/pulse) (манифест сервиса для каталога и
+диагностики) в шаблоне нет: она необязательна и делается отдельно, когда разработчик об этом
+попросит, — по `docs/service-manifest.md` в репозитории pulse.
+
 ## Сопровождение шаблона
 
 - Тело проекта живёт в каталоге `{{cookiecutter.project_slug}}/`.
@@ -129,6 +125,6 @@ Makefile, Dockerfile, CI и `.claude/settings.json`. Скиллов в само�
 ### Локальная проверка
 
 ```bash
-cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона" install_skills=no
+cookiecutter . --no-input -o /tmp/out install_skills=no
 cd /tmp/out/myservice && go build ./...
 ```

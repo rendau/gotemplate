@@ -29,10 +29,7 @@
   - `app.go` — граф зависимостей и запуск компонентов.
   - `grpc.go` — gRPC сервер + интерсепторы ошибок/метрик/трейсинга.
   - `grpc_gateway.go` — HTTP-gateway, CORS, error handler.
-  - `system_http_server.go` — системный HTTP-сервер (порт 3003): /healthcheck, /docs/*, /metrics,
-    манифест для pulse.
-  - `manifest.go` — сведения о сервисе для манифеста pulse (от человека: название, описание, команда,
-    критичность).
+  - `system_http_server.go` — системный HTTP-сервер (порт 3003): /healthcheck, /docs/*, /metrics.
   - `migration.go` — запуск миграций из `migrations/`.
 - `internal/config/` — конфигурация через env (см. `config.go`).
 - `internal/handler/` — транспортный слой.
@@ -47,8 +44,6 @@
   - `*/repo/` — репозитории.
   - `common/` — общие модели/утилиты/PG базовый репозиторий.
 - `internal/service/` — сервисы (фоновые/инфраструктурные), для переиспользования или выделения логики.
-- `internal/infra/pulsekit/` — манифест сервиса для pulse (см. «Манифест для pulse»). Пакет — копия
-  эталона из gotemplate: на месте не править, обновлять целиком из шаблона.
 - `internal/errs/` и `internal/constant/` — общие коды ошибок и константы (`Version`, `Commit`,
   `BuiltAt` — из ldflags при сборке).
 
@@ -118,8 +113,8 @@ domain service → repo
 - Семантические ошибки — через `internal/errs` (см. gRPC interceptor в `internal/app/grpc.go`).
   Отказ по делу (не найдено, неверный запрос, неверный код) — всегда `errs.Err` (свой код сервиса
   или общий): такой ответ пишется в лог уровнем info и в метрике `request_total` получает свой
-  `code`, pulse показывает его как `rejected_rate`, а не сбой. Любая другая ошибка —
-  `service_not_available` (`errs.IsFailure`): лог уровнем error, `error_rate`.
+  `code` — это отказ, а не сбой. Любая другая ошибка — `service_not_available` (`errs.IsFailure`):
+  лог уровнем error, сбой в метриках.
 - Валидация параметров — в usecase.
 - Нельзя пробрасывать ошибки наружу без wrapping (оборачивать в `fmt.Errorf("...: %w")`).
 - Для работы с ошибками всегда используй `errors.Is` и `errors.AsType`. Избегай прямого
@@ -217,36 +212,19 @@ domain service → repo
 - Отдельный сервер на порту `3003` (`const systemHttpPort` в `internal/app/system_http_server.go`).
 - Обслуживает служебные ручки: `/healthcheck`, `/docs/*`, `/metrics`.
 
-### Манифест для pulse
-- Сервис сам рассказывает pulse о себе на системном порту: `/.well-known/pulse` (манифест),
-  `/.well-known/pulse/status` (состояние зависимостей), диагностические ручки `/diag/*`. Стандарт и
-  правила конфиденциальности — `github.com/rendau/pulse`, `docs/service-manifest.md`;
-  **агент, внедряющий манифест, сначала читает там раздел «Для агента»**.
-- Зависимость объявляется одной строкой рядом с созданием клиента в `app.go`:
-  `a.pulsekit.Depend("pg", "postgres", pulsekit.Host(config.Conf.PgDsn), true, a.pgpool.Ping)` — id,
-  вид, хост, критичность, проверка. Адрес из конфигурации — только через `pulsekit.Host` (URL, DSN
-  `host=… password=…`, `dns:///`, `host:port` → только хост). Postgres объявлен в шаблоне.
-- Что ломает зависимость — `Depend(…).Affects("выдача заказов")`; платный API или API без
-  health-ручки — пассивная проверка `pulsekit.NewPassive` (исходы настоящих вызовов, `Observe(err)`).
-- Показатели состояния — `a.pulsekit.Gauge`/`GaugeTime` (глубина очереди, последняя выгрузка);
-  свои метрики — `Metric`, узнаваемые ошибки в логах — `ErrorPattern`, инструкции — `Service.Runbooks`.
-- Диагностическая ручка — `pulsekit.Handle(a.pulsekit, pulsekit.Endpoint{…}, fn)`: схема ответа
-  строится из типа ответа (json-теги; тег `pulse:"personal=phone,maxLength=…,maxItems=…,enum=a|b,description=…"`,
-  description — последним, запятые можно). Строковому параметру нужен `Pattern`, `Enum` или
-  `Personal`; поля с именами секретов запрещены. Нарушение не роняет сервис: ручка не публикуется,
-  причина — в лог и `kit.Problems()` (тест манифеста требует пустой список); длинные тексты —
-  `kit.Warnings()`. Ошибка для человека — `pulsekit.Error{Status, Message}`,
-  остальные ошибки наружу не уходят; своё сообщение из ошибки — `pulsekit.Describe(err)`.
-- Вызов ручки pulsekit пишет в лог сам (с `X-Pulse-Request-Id`); для своих строк —
-  `pulsekit.RequestId(ctx)`. Тест ручки — `kit.CheckEndpoint(id, params)`: ответ сверяется со схемой.
-- Только чтение, быстро, без побочных эффектов; в ответ — только то, что можно показать на общем
-  дашборде.
+### Интеграция с pulse
+- **Необязательна и делается отдельно — только когда об этом просит разработчик.** Без такой
+  просьбы pulse не подключать и под него не адаптировать: ни пакета `pulsekit`, ни манифеста, ни
+  `/.well-known/pulse`, ни вопросов о команде и критичности.
+- Когда разработчик попросил: стандарт, готовый пакет `internal/infra/pulsekit` и шаги подключения
+  к сервису на этом шаблоне — в `github.com/rendau/pulse`, `docs/service-manifest.md` (раздел
+  «Go: пакет pulsekit»); **сначала прочитай там раздел «Для агента»**.
 
 ### Метрики и трассировка
 - Prometheus метрики на `/metrics` (системный сервер, порт 3003) при `WITH_METRICS=true`.
   Используется `metrics.Registry`, а не дефолтный `promhttp.Handler()`.
 - `request_total{protocol, method, status, code}`: `status` — ok|error, `code` — ok или код
-  ошибки ответа (`errs.Code`, набор конечен). Лейблы не убирать: по `code` pulse отличает сбои
+  ошибки ответа (`errs.Code`, набор конечен). Лейблы не убирать: по `code` сбои отличаются
   от отказов по делу.
 - Трейсинг Jaeger включается при `WITH_TRACING=true` и `JAEGER_ADDRESS`.
 
@@ -255,8 +233,8 @@ domain service → repo
 - `/docs/*` — статические docs + swagger (`docs/api.swagger.json`), порт 3003.
 
 ### Сборка
-- `make build` создаёт бинарник `cmd/build/svc` (версия, полный коммит и время сборки — в ldflags:
-  `build` манифеста).
+- `make build` создаёт бинарник `cmd/build/svc` (версия, полный коммит и время сборки — в ldflags,
+  `internal/constant`; пишутся в лог при старте).
 - Dockerfile копирует бинарник, `docs/` и `migrations/` в `/app`.
 
 ### Flow проверки изменений

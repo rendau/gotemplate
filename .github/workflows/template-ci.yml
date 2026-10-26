@@ -18,15 +18,14 @@ jobs:
       - name: Install cookiecutter
         run: pipx install cookiecutter
 
-      # команду и описание сервиса (манифест pulse) хук требует от человека — в CI задаём явно
       - name: Render with defaults
-        run: cookiecutter . --no-input -o /tmp/out owner_team=platform service_description="Smoke-проверка шаблона" install_skills=no
+        run: cookiecutter . --no-input -o /tmp/out install_skills=no
 
       - name: Skills are not installed when declined
         run: test ! -e ~/.claude/skills/crud
 
       - name: Render with custom values
-        run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme owner_team=platform service_description="Заказы" criticality=high
+        run: cookiecutter . --no-input -o /tmp/out-custom project_slug=orders module_owner=github.com/acme
 
       # у раннера нет SSH-доступа к <owner>/protos — остаются protos из шаблона
       - name: No protos repo without access
@@ -42,15 +41,15 @@ jobs:
             test -f ~/.claude/skills/$s/SKILL.md
           done
 
-      - name: Render without service info must fail
-        run: "! cookiecutter . --no-input -o /tmp/out-empty"
+      - name: Render with invalid project_slug must fail
+        run: "! cookiecutter . --no-input -o /tmp/out-bad project_slug=Bad-Name install_skills=no"
 
       - name: Build generated project (defaults)
         working-directory: /tmp/out/myservice
         run: |
           go build ./...
           go vet ./...
-          go test ./internal/app/ ./internal/infra/pulsekit/...
+          go test ./...
 
       # локальный тулчейн из bin/ (Makefile вызывает только его); пробный .proto с HTTP/swagger-
       # аннотациями и общими типами — сгенерированный код должен собираться

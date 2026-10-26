@@ -28,6 +28,12 @@ func runMigrations() {
 		return
 	}
 
+	// no migrations yet (fresh service): migrate treats an empty source as an error
+	if ups, _ := filepath.Glob(filepath.Join(absPath, "*.up.sql")); len(ups) == 0 {
+		slog.Warn("migrations folder has no migrations, nothing to apply", "path", absPath)
+		return
+	}
+
 	m, err := migrate.New("file://"+absPath, config.Conf.PgDsn)
 	if err != nil {
 		panic(err)
