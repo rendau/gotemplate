@@ -16,7 +16,7 @@ SERVICE_NAME = {{ cookiecutter.__proto_pkg }}
 PROTOS_REPO =
 # vendor repo sparse dirs
 protos-dirs = google protoc-gen-openapiv2 common
-# common.proto генерируется в пакет сервиса (его go_package — чужой модуль): для всех плагинов
+# пакет common.proto — пакет сервиса (go_package в файле нет или он чужой): для всех плагинов
 COMMON_PKG = Mcommon/common.proto=$(shell go list -m)/pkg/proto/common
 vendor-proto-dirs = vp-common
 
@@ -106,7 +106,7 @@ generate-proto-$(SERVICE_NAME):
 	--go_opt=$(COMMON_PKG) \
 	--go-grpc_out pkg/proto --go-grpc_opt paths=source_relative --go-grpc_opt=$(COMMON_PKG) \
 	--grpc-gateway_out pkg/proto --grpc-gateway_opt paths=source_relative --grpc-gateway_opt=$(COMMON_PKG) \
-	--openapiv2_out=json_names_for_fields=false,allow_merge=true,merge_file_name=api:docs \
+	--openapiv2_out=json_names_for_fields=false,allow_merge=true,merge_file_name=api:docs --openapiv2_opt=$(COMMON_PKG) \
 	api/proto/$(SERVICE_NAME)/*.proto
 
 generate-proto: proto-tools generate-vendor-proto-dirs generate-proto-$(SERVICE_NAME)

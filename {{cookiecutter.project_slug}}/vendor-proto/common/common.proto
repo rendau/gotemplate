@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package common;
 
-option go_package = "github.com/mechta-market/nsi/pkg/proto/common";
-
 message ListParamsSt {
   int64 page = 2;
   int64 page_size = 3;

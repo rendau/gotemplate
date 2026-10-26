@@ -386,7 +386,7 @@ const file_common_common_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\textension\x18\x02 \x01(\tR\textension\x12\x1b\n" +
 	"\tmime_type\x18\x03 \x01(\tR\bmimeType\x12\x12\n" +
-	"\x04data\x18\x04 \x01(\fR\x04dataB/Z-github.com/mechta-market/nsi/pkg/proto/commonb\x06proto3"
+	"\x04data\x18\x04 \x01(\fR\x04datab\x06proto3"
 
 var (
 	file_common_common_proto_rawDescOnce sync.Once
